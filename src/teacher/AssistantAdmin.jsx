@@ -47,7 +47,7 @@ export default function AssistantAdmin({ store, data, sq, reload }) {
           <button className="btn btn-sm" onClick={() => { setForm(blank()); setFromSq(null) }}>إجابة جديدة</button>
         </div>
         {form && (
-          <form className="panel stack" onSubmit={save} style={{ borderColor: 'var(--accent)' }}>
+          <form className="panel stack" onSubmit={save} style={{ borderColor: 'var(--primary)' }}>
             <label className="field" htmlFor="fa-q">السؤال<input id="fa-q" className="input" value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></label>
             <label className="field" htmlFor="fa-k">كلمات مفتاحية (تساعد على التعرّف على صيغ السؤال المختلفة)<input id="fa-k" className="input" value={form.keywords} onChange={(e) => setForm({ ...form, keywords: e.target.value })} placeholder="مثال: فرضية صياغة اكتب" /></label>
             <label className="field" htmlFor="fa-a">التلميح (لا يعطي الحل كاملًا)<textarea id="fa-a" className="input" value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} /></label>

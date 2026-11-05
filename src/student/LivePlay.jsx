@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { SITE } from '../config.js'
+import Icon from '../components/Icons.jsx'
 
 const LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و']
 
@@ -79,17 +80,17 @@ export default function LivePlay({ store, student, data, initialCode }) {
 
   if (!joined) {
     return (
-      <main className="wrap entry">
-        <form className="panel entry-card stack" onSubmit={(e) => { e.preventDefault(); join() }}>
-          <h1>التحدي المباشر</h1>
-          <p className="muted">اكتبي الرمز الظاهر على شاشة المعلمة.</p>
-          <label className="field" htmlFor="live-code">
-            رمز التحدي
-            <input id="live-code" className="input num" inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} placeholder="0000" style={{ fontSize: '1.6rem', textAlign: 'center', letterSpacing: '0.3em' }} />
-          </label>
-          {err && <div className="notice error" role="alert">{err}</div>}
-          <button className="btn btn-flame" disabled={code.length !== 4 || busy}>{busy ? 'جارٍ الدخول…' : 'ادخلي التحدي'}</button>
-        </form>
+      <main className="wrap">
+        <section className="ch-hero">
+          <div className="stack" style={{ gap: 10 }}><h1>المسابقة المباشرة</h1></div>
+          <form onSubmit={(e) => { e.preventDefault(); join() }}>
+            <label className="field" htmlFor="live-code">الكود
+              <input id="live-code" className="input code-input num" inputMode="numeric" maxLength={4} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+            </label>
+            {err && <div className="notice error" role="alert">{err}</div>}
+            <button className="btn btn-sun btn-lg" disabled={code.length !== 4 || busy}>{busy ? 'جارٍ الدخول…' : 'ادخلي'}</button>
+          </form>
+        </section>
       </main>
     )
   }
@@ -105,13 +106,13 @@ export default function LivePlay({ store, student, data, initialCode }) {
       <div className="quiz">
         <div className="spread">
           <span className="eyebrow">التحدي المباشر · {student.name}</span>
-          <span className="chip accent num">نقاطك: {me?.score || 0}</span>
+          <span className="chip primary num" style={{ fontSize: '0.95rem', padding: '5px 14px' }}>نقاطك: {me?.score || 0}</span>
         </div>
 
         {game.status === 'lobby' && (
-          <div className="panel stack pop" style={{ textAlign: 'center', alignItems: 'center' }}>
-            <h2>تم دخولك</h2>
-            <p className="muted">انتظري حتى تبدأ المعلمة المسابقة. عدد المشاركات الآن: <b className="num">{state.players.length}</b></p>
+          <div className="qcard" style={{ textAlign: 'center', alignItems: 'center' }}>
+            <h2>أنتِ في المسابقة</h2>
+            <p className="muted">تبدأ عندما تطلقها المعلمة · المشاركات الآن <b className="num">{state.players.length}</b></p>
           </div>
         )}
 
@@ -121,11 +122,12 @@ export default function LivePlay({ store, student, data, initialCode }) {
               <span className="small muted num">السؤال {game.current_index + 1} من {questions.length}</span>
               <span className="timer" aria-live="off">{left}</span>
             </div>
+            <section className="qcard">
             <p className="qtext">{q.text}</p>
             {myAnswer ? (
-              <div className="panel pop" style={{ textAlign: 'center' }}>
-                <h3>وصلت إجابتك</h3>
-                <p className="muted">انتظري إظهار الإجابة الصحيحة.</p>
+              <div className="feedback good" style={{ background: 'var(--primary-soft)' }}>
+                <span className="ic" style={{ background: 'var(--primary)' }}><Icon name="check" /></span>
+                <div><b style={{ color: 'var(--primary)' }}>وصلت إجابتك</b><span>تظهر الإجابة الصحيحة بعد قليل.</span></div>
               </div>
             ) : (
               <div className="options">
@@ -136,26 +138,37 @@ export default function LivePlay({ store, student, data, initialCode }) {
                 ))}
               </div>
             )}
+            </section>
           </>
         )}
 
         {game.status === 'reveal' && q && (
-          <div className={`feedback pop ${myAnswer?.correct ? 'good' : 'bad'}`}>
-            <b>{!myAnswer ? 'لم تُجيبي عن هذا السؤال' : myAnswer.correct ? `إجابة صحيحة، +${myAnswer.points} نقطة` : 'إجابة غير صحيحة'}</b>
-            <span>الإجابة الصحيحة: {q.options[q.correct]}</span>
-            <span className="small">{q.explanation}</span>
-          </div>
+          <section className="qcard">
+            <p className="qtext">{q.text}</p>
+            <div className="options">
+              {q.options.map((o, c) => (
+                <div key={c} className={`option ${c === q.correct ? 'correct' : c === myAnswer?.choice ? 'wrong' : 'dim'}`}>
+                  <span className="letter">{LETTERS[c]}</span><span>{o}</span>
+                  {c === q.correct && <span className="mark"><Icon name="check" /></span>}
+                </div>
+              ))}
+            </div>
+            <div className={`feedback ${myAnswer?.correct ? 'good' : 'bad'}`}>
+              <span className="ic"><Icon name={myAnswer?.correct ? 'check' : 'lightbulb'} /></span>
+              <div><b>{!myAnswer ? 'لم تُجيبي عن هذا السؤال' : myAnswer.correct ? `صحيحة! +${myAnswer.points} نقطة` : 'ليست هذه'}</b><span>{q.explanation}</span></div>
+            </div>
+          </section>
         )}
 
         {game.status === 'ended' && (
           <div className="stack pop">
-            <div className="panel" style={{ textAlign: 'center' }}>
+            <div className="qcard" style={{ textAlign: 'center', alignItems: 'center' }}>
               <h2>انتهت المسابقة</h2>
               <p className="muted num">ترتيبك {myRank} من {board.length}، بمجموع {me?.score || 0} نقطة.</p>
             </div>
             <ol className="leader">
-              {board.slice(0, 5).map((p, i) => (
-                <li key={p.id}><b className="num">{i + 1}</b><span>{p.name} <span className="small muted">({p.class_name})</span></span><b className="num">{p.score}</b></li>
+              {board.slice(0, 10).map((p, i) => (
+                <li key={p.id} className={p.id === joined.playerId ? 'me' : ''}><span className="pos num">{i + 1}</span><span>{p.name} <span className="small muted">({p.class_name})</span></span><b className="num">{p.score}</b></li>
               ))}
             </ol>
           </div>

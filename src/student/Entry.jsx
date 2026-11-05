@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { SITE } from '../config.js'
-import { AtomMark } from '../components/Illustrations.jsx'
+import { EntryArt } from '../components/Art.jsx'
 
-export default function Entry({ onDone, demo }) {
+export default function Entry({ onDone }) {
   const [name, setName] = useState('')
   const [cls, setCls] = useState(SITE.classes[0])
   const [err, setErr] = useState('')
@@ -16,25 +16,28 @@ export default function Entry({ onDone, demo }) {
 
   return (
     <main className="wrap entry">
-      <form className="panel entry-card stack" onSubmit={submit}>
-        <div className="entry-hero">
-          <AtomMark size={52} />
-          <h1>{SITE.name}</h1>
-          <p className="muted">العلوم · الصف الأول المتوسط</p>
-        </div>
-        <label className="field" htmlFor="st-name">
-          اسم الطالبة
-          <input id="st-name" className="input" value={name} onChange={(e) => { setName(e.target.value); setErr('') }} autoComplete="name" />
-        </label>
-        <label className="field" htmlFor="st-class">
-          الفصل
-          <select id="st-class" className="input" value={cls} onChange={(e) => setCls(e.target.value)}>
-            {SITE.classes.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </label>
-        {err && <div className="notice error" role="alert">{err}</div>}
-        <button className="btn btn-primary" type="submit">دخول</button>
-      </form>
+      <div className="panel entry-card">
+        <div className="entry-art"><EntryArt /></div>
+        <form className="entry-form" onSubmit={submit}>
+          <div className="stack" style={{ gap: 6 }}>
+            <span className="eyebrow">{SITE.unitNote}</span>
+            <h1>{SITE.name}</h1>
+            <p className="muted">{SITE.unitTitle}</p>
+          </div>
+          <label className="field" htmlFor="st-name">
+            اسم الطالبة
+            <input id="st-name" className="input" value={name} onChange={(e) => { setName(e.target.value); setErr('') }} autoComplete="name" />
+          </label>
+          <label className="field" htmlFor="st-class">
+            الفصل
+            <select id="st-class" className="input" value={cls} onChange={(e) => setCls(e.target.value)}>
+              {SITE.classes.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          {err && <div className="notice error" role="alert">{err}</div>}
+          <button className="btn btn-primary btn-lg" type="submit">دخول</button>
+        </form>
+      </div>
     </main>
   )
 }

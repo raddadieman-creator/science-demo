@@ -20,7 +20,7 @@ function QuestionForm({ initial, concepts, onSave, onCancel }) {
   }
 
   return (
-    <form className="panel stack" onSubmit={save} style={{ borderColor: 'var(--accent)' }}>
+    <form className="panel stack" onSubmit={save} style={{ borderColor: 'var(--primary)' }}>
       <h3>{initial._new ? 'سؤال جديد' : 'تعديل السؤال'}</h3>
       <label className="field" htmlFor="qf-text">نص السؤال
         <textarea id="qf-text" className="input" value={q.text} onChange={(e) => set('text', e.target.value)} />
@@ -123,7 +123,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
         {qs.map((q, i) => (
           <div key={q.id} className="item">
             <div className="spread">
-              <div className="row"><b className="num">{i + 1}.</b><span className="chip accent">{q.level}</span><span className="chip">{q.concept}</span></div>
+              <div className="row"><b className="num">{i + 1}.</b><span className="chip primary">{q.level}</span><span className="chip">{q.concept}</span></div>
               <div className="row">
                 <button className="btn btn-sm" onClick={() => setEditing(q)}>تعديل</button>
                 {confirm === q.id ? (

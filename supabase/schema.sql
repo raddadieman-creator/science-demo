@@ -64,8 +64,10 @@ create table if not exists attempts (
   score int not null,
   total int not null,
   answers jsonb default '[]'::jsonb,
+  challenge_id text,
   created_at timestamptz default now()
 );
+alter table attempts add column if not exists challenge_id text;
 
 create table if not exists progress_events (
   id text primary key,
@@ -76,6 +78,15 @@ create table if not exists progress_events (
   created_at timestamptz default now()
 );
 create index if not exists progress_events_student on progress_events (student_name, class_name);
+
+create table if not exists challenges (
+  id text primary key,
+  code text not null unique,
+  quiz_id text not null,
+  title text not null,
+  active boolean not null default true,
+  created_at timestamptz default now()
+);
 
 create table if not exists student_questions (
   id text primary key,
@@ -125,6 +136,7 @@ alter table enrichments enable row level security;
 alter table attempts enable row level security;
 alter table student_questions enable row level security;
 alter table progress_events enable row level security;
+alter table challenges enable row level security;
 alter table games enable row level security;
 alter table players enable row level security;
 alter table game_answers enable row level security;
@@ -133,7 +145,7 @@ alter table game_answers enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games'] loop
+  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges'] loop
     execute format('drop policy if exists "read_%1$s" on %1$s', t);
     execute format('create policy "read_%1$s" on %1$s for select using (true)', t);
     execute format('drop policy if exists "teacher_%1$s" on %1$s', t);
@@ -173,6 +185,21 @@ create policy "submit_answers" on game_answers for insert with check (
 );
 drop policy if exists "teacher_answers" on game_answers;
 create policy "teacher_answers" on game_answers for all to authenticated using (true) with check (true);
+
+-- لوحة ترتيب التحدي: تعرض أفضل نتيجة لكل طالبة دون كشف بقية بيانات المحاولات
+create or replace function challenge_board(p_challenge text)
+returns table (student_name text, class_name text, best_pct int, tries int)
+language sql security definer set search_path = public as $$
+  select a.student_name, a.class_name,
+         max(round(a.score * 100.0 / nullif(a.total, 0)))::int as best_pct,
+         count(*)::int as tries
+  from attempts a
+  where a.challenge_id = p_challenge
+  group by a.student_name, a.class_name
+  order by best_pct desc, tries asc
+  limit 50;
+$$;
+grant execute on function challenge_board(text) to anon, authenticated;
 
 -- ===================== البث المباشر للمسابقة
 do $$

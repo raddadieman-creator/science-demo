@@ -1,5 +1,5 @@
 // طبقة البيانات: تعمل مع Supabase عند ضبط المتغيرات، وإلا تعمل محليًا في المتصفح (نسخة تجريبية)
-import { USE_SUPABASE, SUPABASE_URL, SUPABASE_ANON_KEY, SITE } from '../config.js'
+import { USE_SUPABASE, SUPABASE_URL, SUPABASE_ANON_KEY, SITE, AI_ENABLED } from '../config.js'
 import { LESSONS, QUIZZES, QUESTIONS, FAQ } from '../data/seed.js'
 
 export const uid = () =>
@@ -15,6 +15,19 @@ export class StoreError extends Error {
   }
 }
 
+export function boardFrom(attempts) {
+  const m = new Map()
+  for (const a of attempts) {
+    const k = a.student_name + '|' + a.class_name
+    const pct = Math.round((a.score / a.total) * 100)
+    const v = m.get(k) || { name: a.student_name, cls: a.class_name, pct: 0, tries: 0 }
+    v.pct = Math.max(v.pct, pct)
+    v.tries += 1
+    m.set(k, v)
+  }
+  return [...m.values()].sort((a, b) => b.pct - a.pct || a.tries - b.tries)
+}
+
 // ---------------------------------------------------------------- محلي
 function createLocalStore() {
   const KEY = 'mukhtabari:v2'
@@ -28,6 +41,7 @@ function createLocalStore() {
     enrichments: [],
     attempts: [],
     events: [],
+    challenges: [],
     student_questions: [],
     games: [],
     players: [],
@@ -94,6 +108,22 @@ function createLocalStore() {
     async addAttempt(a) { return tx((db) => upsert(db.attempts, { id: uid(), created_at: new Date().toISOString(), ...a })) },
     async getAttempts() { return [...read().attempts].sort(byNewest) },
     async deleteAttempt(id) { tx((db) => { db.attempts = db.attempts.filter((x) => x.id !== id) }) },
+
+    async createChallenge({ quiz_id, title }) {
+      return tx((db) => {
+        db.challenges = db.challenges || []
+        let code
+        do { code = String(Math.floor(100000 + Math.random() * 900000)) } while (db.challenges.some((c) => c.code === code))
+        return upsert(db.challenges, { id: uid(), code, quiz_id, title, active: true, created_at: new Date().toISOString() })
+      })
+    },
+    async getChallenges() { return [...(read().challenges || [])].sort(byNewest) },
+    async findChallenge(code) { return (read().challenges || []).find((c) => c.code === code && c.active) || null },
+    async setChallengeActive(id, active) { tx((db) => { const c = (db.challenges || []).find((x) => x.id === id); if (c) c.active = active }) },
+    async deleteChallenge(id) { tx((db) => { db.challenges = (db.challenges || []).filter((x) => x.id !== id) }) },
+    async challengeBoard(challenge_id) { return boardFrom(read().attempts.filter((a) => a.challenge_id === challenge_id)) },
+    aiEnabled: false,
+    async askAI() { throw new StoreError('المساعد الذكي غير مفعّل.') },
 
     async addEvent(ev) { return tx((db) => { db.events = db.events || []; db.events.push({ id: uid(), created_at: new Date().toISOString(), ...ev }); return ev }) },
     async getEvents() { return [...(read().events || [])].sort(byNewest) },
@@ -207,6 +237,32 @@ async function createSupabaseStore() {
     async addAttempt(a) { await run(sb.from('attempts').insert({ id: uid(), ...a })); return a },
     getAttempts: () => all('attempts', 'created_at'),
     deleteAttempt: (id) => del('attempts', id),
+
+    async createChallenge({ quiz_id, title }) {
+      for (let i = 0; i < 6; i++) {
+        const code = String(Math.floor(100000 + Math.random() * 900000))
+        const res = await sb.from('challenges').insert({ id: uid(), code, quiz_id, title, active: true }).select()
+        if (!res.error) return res.data[0]
+      }
+      throw new StoreError('تعذّر إنشاء التحدي، حاولي مرة أخرى.')
+    },
+    getChallenges: () => all('challenges', 'created_at'),
+    async findChallenge(code) {
+      const d = await run(sb.from('challenges').select('*').eq('code', code).eq('active', true).limit(1))
+      return d?.[0] || null
+    },
+    async setChallengeActive(id, active) { await run(sb.from('challenges').update({ active }).eq('id', id)) },
+    deleteChallenge: (id) => del('challenges', id),
+    async challengeBoard(challenge_id) {
+      const d = await run(sb.rpc('challenge_board', { p_challenge: challenge_id }))
+      return (d || []).map((r) => ({ name: r.student_name, cls: r.class_name, pct: r.best_pct, tries: r.tries }))
+    },
+    aiEnabled: AI_ENABLED,
+    async askAI(messages) {
+      const { data, error } = await sb.functions.invoke('ask', { body: { messages } })
+      if (error || !data?.text) throw new StoreError('تعذّر الوصول إلى المساعد الذكي.')
+      return data.text
+    },
 
     async addEvent(ev) { await run(sb.from('progress_events').insert({ id: uid(), ...ev })); return ev },
     async getEvents() {

@@ -30,16 +30,16 @@ export default function LiveHost({ store, data }) {
   if (!gameId) {
     return (
       <div className="panel stack" style={{ maxWidth: 560 }}>
-        <h3>بدء مسابقة مباشرة في الحصة</h3>
+        <h3>مسابقة مباشرة في الحصة</h3>
         <label className="field" htmlFor="lh-quiz">أسئلة المسابقة
           <select id="lh-quiz" className="input" value={quizId} onChange={(e) => setQuizId(e.target.value)}>
             {data.quizzes.map((x) => <option key={x.id} value={x.id}>{x.title} ({data.questions.filter((y) => y.quiz_id === x.id).length})</option>)}
           </select>
         </label>
         {err && <div className="notice error">{err}</div>}
-        <button className="btn btn-flame" disabled={!questions.length} onClick={async () => {
+        <button className="btn btn-sun" disabled={!questions.length} onClick={async () => {
           try { const g = await store.createGame(quizId); setGameId(g.id) } catch (e) { setErr(e.message) }
-        }}>إنشاء رمز المسابقة</button>
+        }}>توليد كود المسابقة</button>
       </div>
     )
   }
@@ -51,8 +51,8 @@ export default function LiveHost({ store, data }) {
     <div className="stack" style={{ gap: 18 }}>
       {game.status === 'lobby' && (
         <div className="panel stack" style={{ alignItems: 'center', textAlign: 'center' }}>
-          <p className="muted">ادخلي إلى {SITE.name} ← التحدي المباشر، واكتبي الرمز</p>
-          <div className="live-code">{game.code}</div>
+          <p className="muted">{SITE.name} ← التحديات ← الكود</p>
+          <div className="big-code">{game.code}</div>
           <p className="num"><b>{state.players.length}</b> طالبة دخلت</p>
           <div className="player-pills" style={{ justifyContent: 'center' }}>
             {state.players.map((p) => <span key={p.id}>{p.name}</span>)}
@@ -64,7 +64,7 @@ export default function LiveHost({ store, data }) {
       {(game.status === 'question' || game.status === 'reveal') && q && (
         <div className="panel stack">
           <div className="spread">
-            <span className="chip accent num">السؤال {game.current_index + 1} من {questions.length} · الرمز {game.code}</span>
+            <span className="chip primary num">السؤال {game.current_index + 1} من {questions.length} · الرمز {game.code}</span>
             {game.status === 'question' ? <span className="timer">{left}</span> : <span className="chip good">الإجابة الصحيحة</span>}
           </div>
           <p className="qtext">{q.text}</p>
@@ -89,7 +89,7 @@ export default function LiveHost({ store, data }) {
             ) : game.current_index + 1 < questions.length ? (
               <button className="btn btn-primary" onClick={() => startQ(game.current_index + 1)}>السؤال التالي</button>
             ) : (
-              <button className="btn btn-flame" onClick={() => update({ status: 'ended' })}>إنهاء وعرض الفائزات</button>
+              <button className="btn btn-sun" onClick={() => update({ status: 'ended' })}>إنهاء وعرض الفائزات</button>
             )}
           </div>
           {game.status === 'reveal' && <p className="small muted">{q.explanation}</p>}
@@ -101,7 +101,7 @@ export default function LiveHost({ store, data }) {
           <h3>{game.status === 'ended' ? 'النتيجة النهائية' : 'لوحة الصدارة'}</h3>
           <ol className="leader">
             {board.slice(0, game.status === 'ended' ? 10 : 5).map((p, i) => (
-              <li key={p.id}><b className="num">{i + 1}</b><span>{p.name} <span className="small muted">({p.class_name})</span></span><b className="num">{p.score}</b></li>
+              <li key={p.id}><span className="pos num">{i + 1}</span><span>{p.name} <span className="small muted">({p.class_name})</span></span><b className="num">{p.score}</b></li>
             ))}
           </ol>
         </div>

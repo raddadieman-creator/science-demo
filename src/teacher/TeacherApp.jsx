@@ -5,7 +5,8 @@ import Results from './Results.jsx'
 import QuestionsAdmin from './QuestionsAdmin.jsx'
 import LessonsAdmin from './LessonsAdmin.jsx'
 import AssistantAdmin from './AssistantAdmin.jsx'
-import LiveHost from './LiveHost.jsx'
+import ChallengesAdmin from './ChallengesAdmin.jsx'
+import Icon from '../components/Icons.jsx'
 import Tracking from './Tracking.jsx'
 
 function Login({ store, onIn }) {
@@ -16,7 +17,7 @@ function Login({ store, onIn }) {
   const local = store.mode === 'local'
   return (
     <main className="wrap entry">
-      <form className="panel entry-card stack" onSubmit={async (e) => {
+      <form className="panel stack" style={{ width: '100%', maxWidth: 440 }} onSubmit={async (e) => {
         e.preventDefault(); setErr(''); setBusy(true)
         try { await store.signIn(email.trim(), pw); onIn() } catch (x) { setErr(x.message) } finally { setBusy(false) }
       }}>
@@ -30,7 +31,7 @@ function Login({ store, onIn }) {
           <input id="t-pw" className="input" type="password" dir="ltr" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="current-password" />
         </label>
         {err && <div className="notice error" role="alert">{err}</div>}
-        <button className="btn btn-primary" disabled={busy}>{busy ? 'جارٍ الدخول…' : 'دخول'}</button>
+        <button className="btn btn-primary btn-lg" disabled={busy}>{busy ? 'جارٍ الدخول…' : 'دخول'}</button>
       </form>
     </main>
   )
@@ -40,7 +41,7 @@ const TABS = [
   ['overview', 'نظرة عامة'],
   ['tracking', 'متابعة الطالبات'],
   ['results', 'النتائج'],
-  ['live', 'مسابقة مباشرة'],
+  ['challenges', 'التحديات'],
   ['questions', 'الأسئلة'],
   ['lessons', 'الدروس والإثراءات'],
   ['assistant', 'المساعدة'],
@@ -78,18 +79,18 @@ export default function TeacherApp({ store, data, reload }) {
       <div className="spread">
         <div className="stack" style={{ gap: 2 }}>
           <span className="eyebrow">لوحة المعلمة</span>
-          <h1 style={{ fontSize: '1.8rem' }}>{SITE.teacherName}</h1>
+          <h1 style={{ fontSize: '1.9rem' }}>{SITE.teacherName}</h1>
         </div>
         <div className="row">
           <button className="btn btn-sm" onClick={refreshAll}>تحديث البيانات</button>
-          <button className="btn btn-sm btn-ghost" onClick={async () => { await store.signOut(); setAuthed(false) }}>تسجيل الخروج</button>
+          <button className="btn btn-sm btn-ghost" onClick={async () => { await store.signOut(); setAuthed(false) }}><Icon name="logout" /> خروج</button>
         </div>
       </div>
 
       {err && <div className="notice error" role="alert">{err}</div>}
       {empty && (
         <div className="notice spread">
-          <span>قاعدة البيانات فارغة. ارفعي المحتوى النموذجي (وحدة «ما وراء الأرض»: أربعة دروس، خمسة اختبارات، وإجابات المساعدة) ثم عدّليه كما تشائين.</span>
+          <span>قاعدة البيانات فارغة.</span>
           <button className="btn btn-primary btn-sm" disabled={seeding} onClick={async () => {
             setSeeding(true)
             try { await store.seed(); await refreshAll() } catch (x) { setErr(x.message) } finally { setSeeding(false) }
@@ -110,7 +111,7 @@ export default function TeacherApp({ store, data, reload }) {
           {tab === 'overview' && <Overview data={data} attempts={attempts} sq={sq} goTab={setTab} />}
           {tab === 'tracking' && <Tracking data={data} events={events} attempts={attempts} />}
           {tab === 'results' && <Results store={store} data={data} attempts={attempts} reload={loadT} />}
-          {tab === 'live' && <LiveHost store={store} data={data} />}
+          {tab === 'challenges' && <ChallengesAdmin store={store} data={data} attempts={attempts} reload={loadT} />}
           {tab === 'questions' && <QuestionsAdmin store={store} data={data} reload={reload} />}
           {tab === 'lessons' && <LessonsAdmin store={store} data={data} reload={reload} />}
           {tab === 'assistant' && <AssistantAdmin store={store} data={data} sq={sq} reload={refreshAll} />}
