@@ -126,3 +126,92 @@ export function EntryArt() {
     </svg>
   )
 }
+
+// طاولة مختبر: دوارق ملوّنة تتصاعد منها الفقاعات، وأنابيب اختبار ومجهر
+function Bubbles({ x, y, color, n = 5, spread = 14, seed = 1 }) {
+  const r = (() => { let s = seed; return () => { s = (s * 9301 + 49297) % 233280; return s / 233280 } })()
+  return Array.from({ length: n }, (_, i) => (
+    <circle key={i} className="bub" cx={x + (r() - 0.5) * spread} cy={y} r={2 + r() * 3.5} fill={color}
+      style={{ animationDelay: `${(r() * 3).toFixed(2)}s`, animationDuration: `${(2.4 + r() * 1.8).toFixed(2)}s` }} />
+  ))
+}
+
+export function LabBench({ className = '' }) {
+  return (
+    <svg className={`lab-bench ${className}`} viewBox="0 0 520 300" aria-hidden="true">
+      <defs>
+        <linearGradient id="lbGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#ffffff" stopOpacity="0.9" /><stop offset="0.5" stopColor="#ffffff" stopOpacity="0.35" /><stop offset="1" stopColor="#ffffff" stopOpacity="0.85" /></linearGradient>
+      </defs>
+      {/* رف وطاولة */}
+      <rect x="20" y="250" width="480" height="14" rx="7" fill="#0f766e" opacity="0.9" />
+      <rect x="40" y="264" width="12" height="36" fill="#0f766e" opacity="0.6" />
+      <rect x="468" y="264" width="12" height="36" fill="#0f766e" opacity="0.6" />
+
+      {/* دورق مخروطي بنفسجي */}
+      <g transform="translate(70 120)">
+        <Bubbles x={50} y={70} color="#c4b5fd" seed={3} />
+        <path d="M38 0h24v42l36 78a10 10 0 0 1-9 14H11a10 10 0 0 1-9-14l36-78z" fill="url(#lbGlass)" stroke="#5b4bb7" strokeWidth="3" />
+        <path className="liquid" d="M20 80h60l17 38a8 8 0 0 1-7 12H10a8 8 0 0 1-7-12z" fill="#8b5cf6" />
+        <rect x="34" y="-6" width="32" height="8" rx="4" fill="#5b4bb7" />
+      </g>
+
+      {/* كأس زجاجية برتقالية */}
+      <g transform="translate(190 150)">
+        <Bubbles x={40} y={60} color="#fdba74" seed={8} />
+        <path d="M4 0h72v92a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8z" fill="url(#lbGlass)" stroke="#c2410c" strokeWidth="3" />
+        <rect className="liquid" x="7" y="40" width="66" height="57" rx="5" fill="#f97316" />
+        {[20, 36, 52].map((y) => <line key={y} x1="60" y1={y} x2="74" y2={y} stroke="#c2410c" strokeWidth="2" />)}
+        <path d="M0 0h10" stroke="#c2410c" strokeWidth="3" />
+      </g>
+
+      {/* دورق كروي أزرق */}
+      <g transform="translate(300 100)">
+        <Bubbles x={45} y={100} color="#7dd3fc" seed={13} />
+        <path d="M33 0h24v58a46 46 0 1 1-24 0z" fill="url(#lbGlass)" stroke="#0369a1" strokeWidth="3" />
+        <path className="liquid" d="M3 108a44 44 0 0 0 84 0z" fill="#0ea5e9" transform="translate(0 -6)" />
+        <circle cx="45" cy="104" r="40" fill="#0ea5e9" opacity="0.25" />
+      </g>
+
+      {/* حامل أنابيب اختبار */}
+      <g transform="translate(410 150)">
+        {[['#ec4899', 0], ['#22c55e', 26], ['#facc15', 52]].map(([c, x], i) => (
+          <g key={c} transform={`translate(${x} 0)`}>
+            <rect x="2" y="0" width="18" height="86" rx="9" fill="url(#lbGlass)" stroke="#334155" strokeWidth="2.4" />
+            <rect className="liquid" x="4.5" y={36 + i * 8} width="13" height={46 - i * 8} rx="6.5" fill={c} />
+            <circle className="bub" cx="11" cy={40 + i * 8} r="2.2" fill="#fff" style={{ animationDelay: `${i * 0.7}s` }} />
+          </g>
+        ))}
+        <rect x="-6" y="56" width="88" height="10" rx="3" fill="#334155" />
+        <rect x="-6" y="92" width="88" height="8" rx="3" fill="#334155" />
+      </g>
+
+      {/* جزيئات طافية */}
+      <g className="float-mol" stroke="#14b8a6" strokeWidth="2.2" fill="#fff">
+        <line x1="230" y1="60" x2="262" y2="44" /><line x1="262" y1="44" x2="290" y2="66" />
+        <circle cx="230" cy="60" r="8" fill="#14b8a6" /><circle cx="262" cy="44" r="10" fill="#f97316" stroke="#c2410c" /><circle cx="290" cy="66" r="8" fill="#14b8a6" />
+      </g>
+    </svg>
+  )
+}
+
+// كأس قياس يمتلئ بقدر تقدم الطالبة في الدرس
+export function Beaker({ pct = 0, color = '#14b8a6', size = 64 }) {
+  const id = 'bk' + Math.round(Math.random() * 1e6)
+  const top = 18, bottom = 88, level = bottom - ((bottom - top) * Math.max(6, Math.min(100, pct))) / 100
+  return (
+    <svg width={size} height={size} viewBox="0 0 80 96" aria-hidden="true">
+      <defs><clipPath id={id}><path d="M12 10h56v74a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8z" /></clipPath></defs>
+      <g clipPath={`url(#${id})`}>
+        <rect x="0" y="0" width="80" height="96" fill="#ffffff" />
+        <g className="wave" style={{ transform: `translateY(${level}px)` }}>
+          <path d="M-80 4 Q-60 -2 -40 4 T0 4 T40 4 T80 4 T120 4 V100 H-80 Z" fill={color} opacity="0.9" />
+        </g>
+        {pct > 0 && <circle className="bub" cx="34" cy="86" r="2.6" fill="#fff" />}
+        {pct > 0 && <circle className="bub" cx="48" cy="86" r="2" fill="#fff" style={{ animationDelay: '1.1s' }} />}
+      </g>
+      <path d="M12 10h56v74a8 8 0 0 1-8 8H20a8 8 0 0 1-8-8z" fill="none" stroke="#1e293b" strokeWidth="3.2" />
+      <path d="M8 10h12M60 10h12" stroke="#1e293b" strokeWidth="3.2" strokeLinecap="round" />
+      {[34, 52, 70].map((y) => <line key={y} x1="56" y1={y} x2="66" y2={y} stroke="#1e293b" strokeWidth="2" opacity="0.5" />)}
+    </svg>
+  )
+}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { SITE } from '../config.js'
 import Icon from '../components/Icons.jsx'
-import { Ring } from '../components/Art.jsx'
+import { Beaker, LabBench } from '../components/Art.jsx'
 import { lessonProgress } from '../lib/mine.js'
 import { ORD, themeFor } from '../lib/theme.js'
 
@@ -23,6 +23,11 @@ export default function Home({ data, student, go, openChat }) {
           <span className="eyebrow">{SITE.unitNote}</span>
           <h1>أهلًا {first}</h1>
           <p>{SITE.unitTitle} · {data.lessons.length} دروس، و{videos} فيديو شرح، وأنشطة واختبارات وتحديات.</p>
+          <div className="hero-progress">
+            <span className="small muted">إنجازك</span>
+            <div className="progress"><i style={{ width: `${Math.max(overall, 2)}%` }} /></div>
+            <b className="num">{overall}%</b>
+          </div>
           <div className="row" style={{ marginTop: 6 }}>
             {next && (
               <button className="btn btn-primary btn-lg" onClick={() => go('lesson', next.id)}>
@@ -34,10 +39,7 @@ export default function Home({ data, student, go, openChat }) {
             </button>
           </div>
         </div>
-        <Ring pct={overall} track="var(--surface-3)" color="var(--primary)" stroke={9}>
-          <b className="num">{overall}%</b>
-          <small>إنجازك في الوحدة</small>
-        </Ring>
+        <LabBench />
       </section>
 
       <form className="join" onSubmit={(e) => { e.preventDefault(); if (code.length >= 4) go('challenges', code) }}>
@@ -69,7 +71,7 @@ export default function Home({ data, student, go, openChat }) {
             return (
               <button key={l.id} className="lesson-card" style={{ '--c': t.c }} onClick={() => go('lesson', l.id)}>
                 <div className="lc-head">
-                  <span className="lc-ic"><Icon name={LESSON_ICON[t.art] || 'book'} /></span>
+                  <Beaker pct={p.pct} color={t.hex} size={62} />
                   {p.pct === 100 ? <span className="done-badge">مكتمل</span> : <span className="lc-no">الدرس {ORD[i] || i + 1}</span>}
                 </div>
                 <div className="body">

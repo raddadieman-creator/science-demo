@@ -3,6 +3,7 @@ import Icon from '../components/Icons.jsx'
 import { Illustration } from '../components/Illustrations.jsx'
 import { activityDone, checkAnswer, markActivity, markLesson, markVideo, saveCheck, videoSeen } from '../lib/mine.js'
 import { track } from '../lib/track.js'
+import { cheer } from '../components/Buddy.jsx'
 import { ORD, themeFor, ytThumb } from '../lib/theme.js'
 
 const Scene3D = lazy(() => import('../components/Scene3D.jsx'))
@@ -40,7 +41,7 @@ function QuickCheck({ id, check }) {
           else if (done && i === pick) cls = 'wrong'
           else if (done) cls = 'dim'
           return (
-            <button key={i} className={`pill ${cls}`} disabled={done} onClick={() => { setPick(i); saveCheck(id, i) }}>
+            <button key={i} className={`pill ${cls}`} disabled={done} onClick={() => { setPick(i); saveCheck(id, i); cheer(i === check.correct ? 'happy' : 'sad') }}>
               {cls === 'correct' && <Icon name="check" />}{cls === 'wrong' && <Icon name="x" />}{o}
             </button>
           )
@@ -79,7 +80,7 @@ function SortActivity({ lessonId, activity, onDone }) {
         ))}
       </div>
       {!checked ? (
-        <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} disabled={count < n} onClick={() => { setChecked(true); markActivity(lessonId); onDone?.() }}>
+        <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} disabled={count < n} onClick={() => { setChecked(true); markActivity(lessonId); onDone?.(); cheer(right === n ? 'happy' : 'sad', right === n ? 'كل التصنيفات صحيحة!' : `${right} من ${n} صحيحة`) }}>
           {count < n ? `صنّفي كل العبارات (${count}/${n})` : 'تحقّقي'}
         </button>
       ) : (

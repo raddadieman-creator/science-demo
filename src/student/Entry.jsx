@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { SITE } from '../config.js'
-import { EntryArt } from '../components/Art.jsx'
+import { LabBench } from '../components/Art.jsx'
 
 export default function Entry({ onDone }) {
   const [name, setName] = useState('')
@@ -17,7 +17,7 @@ export default function Entry({ onDone }) {
   return (
     <main className="wrap entry">
       <div className="panel entry-card">
-        <div className="entry-art"><EntryArt /></div>
+        <div className="entry-art"><LabBench /></div>
         <form className="entry-form" onSubmit={submit}>
           <div className="stack" style={{ gap: 6 }}>
             <span className="eyebrow">{SITE.unitNote}</span>

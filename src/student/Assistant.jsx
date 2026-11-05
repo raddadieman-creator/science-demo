@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SITE } from '../config.js'
-import Icon, { AtomOrb } from '../components/Icons.jsx'
+import Icon from '../components/Icons.jsx'
+import Buddy, { AtomFace } from '../components/Buddy.jsx'
 import { matchFaq, matchTerm, rankFaq } from '../lib/arabic.js'
 
 // إجابة من البنك المعدّ (تُستخدم وحدها، أو احتياطًا عند تعذّر الذكاء الاصطناعي)
@@ -49,19 +50,12 @@ export default function Assistant({ store, data, student, go, open, setOpen }) {
 
   const samples = ['f2', 'f28', 'f31', 'f37'].map((id) => data.faq.find((f) => f.id === id)?.question).filter(Boolean)
 
-  if (!open) {
-    return (
-      <button className="fab" onClick={() => setOpen(true)} aria-label={`افتحي المساعدة ${SITE.assistantName}`}>
-        <span className="orb"><AtomOrb /></span>
-        <span className="lbl">اسألي {SITE.assistantName}</span>
-      </button>
-    )
-  }
+  if (!open) return <Buddy onOpen={() => setOpen(true)} />
 
   return (
     <div className="drawer" role="dialog" aria-label={`المساعدة ${SITE.assistantName}`}>
       <div className="chat-head">
-        <span className="orb"><AtomOrb /></span>
+        <span className="face"><AtomFace size={50} /></span>
         <div>
           <b>{SITE.assistantName}</b>
           <small>{ai ? 'مساعدة ذكية آلية · ذكاء اصطناعي' : 'مساعدة العلوم'}</small>

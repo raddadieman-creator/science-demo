@@ -1,6 +1,7 @@
 // عرض سؤال بأي نوع (اختيار، صواب وخطأ، إكمال، ترتيب، مزاوجة) مع التبرير بعد الإجابة
 import { useMemo, useState } from 'react'
 import Icon from '../components/Icons.jsx'
+import { cheer } from '../components/Buddy.jsx'
 
 const LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و']
 const TAGS = ['#2563eb', '#f59e0b', '#8b5cf6', '#0ea5e9', '#ec4899', '#15a34a']
@@ -42,7 +43,7 @@ function Why({ q, choice }) {
 function OptionQuestion({ q, onDone }) {
   const [choice, setChoice] = useState(null)
   const done = choice !== null
-  const pick = (c) => { if (done) return; setChoice(c); onDone({ correct: c === q.correct, choice: c }) }
+  const pick = (c) => { if (done) return; setChoice(c); cheer(c === q.correct ? 'happy' : 'sad'); onDone({ correct: c === q.correct, choice: c }) }
   const cls = (c) => !done ? '' : c === q.correct ? 'correct' : c === choice ? 'wrong' : 'dim'
 
   const text = q.type === 'fill' ? (() => {
@@ -102,7 +103,7 @@ function OrderQuestion({ q, onDone }) {
         </div>
       )}
       {!checked && seq.length === q.items.length && (
-        <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => { setChecked(true); onDone({ correct: allRight }) }}>تحقّقي من الترتيب</button>
+        <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => { setChecked(true); cheer(allRight ? 'happy' : 'sad'); onDone({ correct: allRight }) }}>تحقّقي من الترتيب</button>
       )}
       {checked && (
         <div className={`feedback ${allRight ? 'good' : 'bad'}`} role="status">
@@ -162,7 +163,7 @@ function MatchQuestion({ q, onDone }) {
         })}
       </div>
       {!checked && Object.keys(map).length === q.pairs.length && (
-        <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => { setChecked(true); onDone({ correct: allRight }) }}>تحقّقي من المزاوجة</button>
+        <button className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => { setChecked(true); cheer(allRight ? 'happy' : 'sad'); onDone({ correct: allRight }) }}>تحقّقي من المزاوجة</button>
       )}
       {checked && (
         <div className={`feedback ${allRight ? 'good' : 'bad'}`} role="status">

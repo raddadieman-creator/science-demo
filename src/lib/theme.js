@@ -1,9 +1,9 @@
 // لون ورسم لكل درس بحسب موضوعه
 const MAP = {
   atmosphere: { c: 'var(--c-sky)', hex: '#0ea5e9', art: 'atmosphere' },
-  fronts: { c: 'var(--c-storm)', hex: '#6366f1', art: 'fronts' },
-  moon: { c: 'var(--c-sunrise)', hex: '#f59e0b', art: 'moon' },
-  stars: { c: 'var(--c-galaxy)', hex: '#8b5cf6', art: 'stars' },
+  fronts: { c: 'var(--c-storm)', hex: '#8b5cf6', art: 'fronts' },
+  moon: { c: 'var(--c-sunrise)', hex: '#f97316', art: 'moon' },
+  stars: { c: 'var(--c-galaxy)', hex: '#ec4899', art: 'stars' },
 }
 const ORDER = ['atmosphere', 'fronts', 'moon', 'stars']
 export function themeFor(lesson, index = 0) {

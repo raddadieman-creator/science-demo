@@ -118,10 +118,11 @@ export default function App() {
                   </button>
                 ))}
               </nav>
-              <button className="me-chip" onClick={() => { saveStudent(null); setStudent(null) }} title="تغيير الاسم">
+              <div className="me-chip">
                 <span className="av">{first?.[0]}</span>
                 <span>{first} · {student.class_name}</span>
-              </button>
+                <button className="out" onClick={() => { saveStudent(null); setStudent(null); go('home') }} title="خروج"><Icon name="logout" /> خروج</button>
+              </div>
             </>
           )}
         </div>
