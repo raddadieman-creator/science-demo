@@ -2,7 +2,8 @@
 export async function downloadPdf(node, filename, { landscape = false } = {}) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')])
   await document.fonts?.ready
-  const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false })
+  const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false,
+    onclone: (doc) => doc.querySelectorAll('.cert-fit').forEach((el) => { el.style.transform = 'none' }) })
   const pdf = new jsPDF({ orientation: landscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' })
   const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight()
   const ratio = Math.min((pw - 16) / canvas.width, (ph - 16) / canvas.height)

@@ -32,7 +32,6 @@ function QuickCheck({ id, check }) {
   const done = pick !== null
   return (
     <div className="check">
-      <span className="t"><Icon name="bolt" /> سؤال سريع</span>
       <p className="q">{check.q}</p>
       <div className="opts">
         {check.options.map((o, i) => {

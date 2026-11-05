@@ -584,11 +584,11 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--prim
 .buddy.sad .buddy-body { animation: shake 0.5s ease 2; }
 .buddy-shadow { position: absolute; left: 50%; bottom: -4px; width: 40px; height: 8px; margin-left: -20px; border-radius: 50%; background: rgba(15, 42, 51, 0.18); filter: blur(2px); }
 .buddy-bubble {
-  position: absolute; bottom: calc(100% + 6px); left: 0; white-space: nowrap; max-width: 240px;
+  position: absolute; bottom: calc(100% + 6px); left: 14px; white-space: nowrap; max-width: 240px;
   background: #fff; color: var(--ink); border: 2px solid var(--primary); border-radius: 16px 16px 16px 4px;
   padding: 6px 12px; font-family: var(--f-display); font-weight: 600; font-size: 0.85rem; box-shadow: var(--shadow); animation: rise 0.25s ease;
 }
-.buddy.flip .buddy-bubble { left: auto; right: 0; border-radius: 16px 16px 4px 16px; }
+.buddy.on-right .buddy-bubble { left: auto; right: 0; border-radius: 16px 16px 4px 16px; }
 .buddy.happy .buddy-bubble { border-color: var(--good); }
 .buddy.sad .buddy-bubble { border-color: var(--sun); }
 .atom-face .lid { transform-box: fill-box; transform-origin: center top; transform: scaleY(0); animation: blinkLid 4.6s infinite; }
@@ -653,7 +653,9 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--prim
 .badge-card.earned .medal { animation: pop 0.5s ease; }
 .badge-card.earned small { color: color-mix(in srgb, var(--b) 75%, #000); font-weight: 600; }
 .medal.locked { opacity: 0.7; }
-.cert-wrap { overflow-x: auto; padding: 4px; }
+.cert-wrap { overflow: hidden; padding: 0; }
+.cert-fit { transform-origin: top right; margin-inline-start: 0; }
+[dir="ltr"] .cert-fit { transform-origin: top left; }
 .cert { width: 1000px; max-width: none; margin-inline: auto; background: #fff; padding: 22px; font-family: var(--f-body); color: #0f2a33; }
 .cert-frame { position: relative; border: 3px solid #0d9488; outline: 1px solid #0d9488; outline-offset: -12px; border-radius: 6px; padding: 46px 64px 34px; text-align: center; background:
   radial-gradient(circle at 15% 20%, rgba(13, 148, 136, 0.07), transparent 40%), radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.07), transparent 40%), #fff; }
@@ -731,6 +733,8 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--prim
   body.printing { background: #fff !important; }
   body.printing .buddy, body.printing .topbar { display: none !important; }
   .cert { width: 100%; padding: 0; }
+  .cert-fit { transform: none !important; width: 100% !important; }
+  .cert-wrap { height: auto !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 @media (max-width: 600px) { .podium { gap: 6px; } .pod .pav { width: 54px; height: 54px; font-size: 1.3rem; } .pod.p1 .pav { width: 66px; height: 66px; } }

@@ -120,7 +120,7 @@ export default function Buddy({ onOpen, hidden }) {
   return (
     <button
       ref={ref}
-      className={`buddy ${walking ? 'walk' : ''} ${mood} ${flip ? 'flip' : ''}`}
+      className={`buddy ${walking ? 'walk' : ''} ${mood} ${flip ? 'on-right' : ''}`}
       style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
       onClick={onOpen}
       onMouseEnter={() => !bubble && setBubble('اضغطي واسأليني!')}

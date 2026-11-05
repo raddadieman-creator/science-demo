@@ -1,9 +1,31 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Icon from '../components/Icons.jsx'
 import { Certificate, Medal } from '../components/Awards.jsx'
 import { MASTER, hasMaster, myBadges } from '../lib/badges.js'
 import { bestFor } from '../lib/mine.js'
 import { downloadPdf, printNode } from '../lib/pdf.js'
+
+// تصغير الشهادة لتناسب عرض الشاشة (الجوال والآيباد) دون تمرير أفقي
+function FitBox({ width = 1000, children }) {
+  const outer = useRef(null), inner = useRef(null)
+  const [box, setBox] = useState({ s: 1, h: 'auto' })
+  useEffect(() => {
+    const fit = () => {
+      const w = outer.current?.clientWidth || width
+      const s = Math.min(1, w / width)
+      setBox({ s, h: s < 1 ? (inner.current?.offsetHeight || 0) * s : 'auto' })
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(outer.current)
+    return () => ro.disconnect()
+  }, [width])
+  return (
+    <div ref={outer} className="cert-wrap" style={{ height: box.h }}>
+      <div ref={inner} className="cert-fit" style={{ width, transform: box.s < 1 ? `scale(${box.s})` : undefined }}>{children}</div>
+    </div>
+  )
+}
 
 export default function Achievements({ data, student, go }) {
   const badges = myBadges()
@@ -47,7 +69,7 @@ export default function Achievements({ data, student, go }) {
           )}
         </div>
         {master ? (
-          <div className="cert-wrap"><Certificate ref={cert} student={student} titles={earned} /></div>
+          <FitBox><Certificate ref={cert} student={student} titles={earned} /></FitBox>
         ) : (
           <div className="cert-locked">
             <Icon name="lock" size={30} />
