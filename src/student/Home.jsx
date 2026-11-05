@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { SITE } from '../config.js'
 import Icon from '../components/Icons.jsx'
-import { LessonArt, Ring, UnitSky } from '../components/Art.jsx'
+import { Ring } from '../components/Art.jsx'
 import { lessonProgress } from '../lib/mine.js'
 import { ORD, themeFor } from '../lib/theme.js'
+
+const LESSON_ICON = { atmosphere: 'cloud', fronts: 'wind', moon: 'orbit', stars: 'star' }
 
 export default function Home({ data, student, go, openChat }) {
   const [code, setCode] = useState('')
@@ -17,23 +19,22 @@ export default function Home({ data, student, go, openChat }) {
   return (
     <main className="wrap">
       <section className="hero">
-        <UnitSky />
         <div className="stack" style={{ gap: 12 }}>
           <span className="eyebrow">{SITE.unitNote}</span>
-          <h1>أهلًا {first}،<br />{SITE.unitTitle.split(': ')[1] || SITE.unitTitle} بانتظارك</h1>
-          <p>من طبقات الهواء فوق رأسك إلى المجرات البعيدة: {data.lessons.length} دروس، و{videos} فيديو شرح، وأنشطة واختبارات وتحديات.</p>
+          <h1>أهلًا {first}</h1>
+          <p>{SITE.unitTitle} · {data.lessons.length} دروس، و{videos} فيديو شرح، وأنشطة واختبارات وتحديات.</p>
           <div className="row" style={{ marginTop: 6 }}>
             {next && (
-              <button className="btn btn-white btn-lg" onClick={() => go('lesson', next.id)}>
+              <button className="btn btn-primary btn-lg" onClick={() => go('lesson', next.id)}>
                 {overall > 0 ? 'تابعي' : 'ابدئي'}: {next.title} <Icon name="arrowL" />
               </button>
             )}
-            <button className="btn btn-lg" style={{ background: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }} onClick={openChat}>
+            <button className="btn btn-lg" onClick={openChat}>
               <Icon name="spark" /> اسألي ذرّة
             </button>
           </div>
         </div>
-        <Ring pct={overall}>
+        <Ring pct={overall} track="var(--surface-3)" color="var(--primary)" stroke={9}>
           <b className="num">{overall}%</b>
           <small>إنجازك في الوحدة</small>
         </Ring>
@@ -67,10 +68,9 @@ export default function Home({ data, student, go, openChat }) {
             const p = progress[i]
             return (
               <button key={l.id} className="lesson-card" style={{ '--c': t.c }} onClick={() => go('lesson', l.id)}>
-                <div className="art">
-                  <LessonArt kind={t.art} />
-                  <span className="badge-no">الدرس {ORD[i] || i + 1}</span>
-                  {p.pct === 100 && <span className="done-badge">مكتمل</span>}
+                <div className="lc-head">
+                  <span className="lc-ic"><Icon name={LESSON_ICON[t.art] || 'book'} /></span>
+                  {p.pct === 100 ? <span className="done-badge">مكتمل</span> : <span className="lc-no">الدرس {ORD[i] || i + 1}</span>}
                 </div>
                 <div className="body">
                   <span className="chap">{l.unit}</span>

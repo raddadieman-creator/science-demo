@@ -24,7 +24,7 @@ export default function Challenges({ store, go, initialCode }) {
     <main className="wrap">
       <section className="ch-hero">
         <div className="stack" style={{ gap: 10 }}>
-          <span className="eyebrow" style={{ color: '#8a4b00' }}><Icon name="trophy" size={14} /> التحديات</span>
+          <span className="eyebrow"><Icon name="trophy" size={14} /> التحديات</span>
           <h1>نافسي زميلاتك</h1>
           <p>كود من ستة أرقام لتحدٍّ تحلّينه في أي وقت، وكود من أربعة أرقام للمسابقة المباشرة في الحصة.</p>
         </div>

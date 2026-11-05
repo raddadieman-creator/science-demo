@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { SITE } from './config.js'
 import { getStore } from './lib/store.js'
 import { track } from './lib/track.js'
-import Icon from './components/Icons.jsx'
-import { FlaskMark } from './components/Illustrations.jsx'
+import Icon, { BrandMark } from './components/Icons.jsx'
 import Entry from './student/Entry.jsx'
 import Home from './student/Home.jsx'
 import Lesson from './student/Lesson.jsx'
@@ -104,7 +103,7 @@ export default function App() {
       <header className="topbar">
         <div className="wrap">
           <button className="brand" onClick={() => go('home')} aria-label="الرئيسية">
-            <FlaskMark size={40} />
+            <BrandMark size={38} />
             <span>
               <b>{SITE.name}</b>
               <small>{isTeacher ? 'لوحة المعلمة' : 'العلوم · أول متوسط'}</small>

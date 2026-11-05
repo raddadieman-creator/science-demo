@@ -19,6 +19,10 @@ const P = {
   copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
   users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-6 10a6 6 0 0 1 12 0M17 11a3 3 0 1 0 0-6M21 21a5 5 0 0 0-4-4.9',
   logout: 'M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l-5-5 5-5M5 12h11',
+  cloud: 'M7 18h10a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z',
+  wind: 'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h7',
+  orbit: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3.5 12h17M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z',
+  star: 'M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z',
   lightbulb: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z',
 }
 
@@ -41,6 +45,18 @@ export function AtomOrb() {
         <ellipse rx="17" ry="6.5" transform="rotate(-60)" />
       </g>
       <circle r="4" fill="#ffd166" />
+    </svg>
+  )
+}
+
+// شعار المنصة: دورق مختبر بخط رفيع داخل مربع
+export function BrandMark({ size = 38 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" style={{ flex: 'none' }}>
+      <rect width="40" height="40" rx="11" fill="var(--primary)" />
+      <path d="M16 10h8M17.5 10v7.5L12 27a2.2 2.2 0 0 0 1.9 3.3h12.2A2.2 2.2 0 0 0 28 27l-5.5-9.5V10" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M14.2 23.5h11.6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" opacity="0.7" />
+      <circle cx="18.5" cy="26.6" r="1.1" fill="#fff" /><circle cx="22" cy="25.4" r="0.8" fill="#fff" />
     </svg>
   )
 }

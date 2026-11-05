@@ -99,31 +99,30 @@ export function LessonArt({ kind }) {
   )
 }
 
-// لوحة صفحة الدخول
+// لوحة صفحة الدخول: نمط هندسي هادئ (روابط جزيئية) على لون المنصة
 export function EntryArt() {
+  const hex = (cx, cy, r) => Array.from({ length: 6 }, (_, k) => {
+    const a = (Math.PI / 3) * k + Math.PI / 6
+    return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`
+  }).join(' ')
+  const cells = []
+  for (let row = 0; row < 9; row++) for (let col = 0; col < 8; col++) {
+    const cx = col * 78 + (row % 2 ? 39 : 0), cy = row * 66
+    cells.push(<polygon key={row + '-' + col} points={hex(cx, cy, 38)} />)
+  }
   return (
     <svg viewBox="0 0 520 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <linearGradient id="ea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#0b1d4a" />
-          <stop offset="0.45" stopColor="#2b4ea6" />
-          <stop offset="0.78" stopColor="#79b8ff" />
-          <stop offset="1" stopColor="#ffd59a" />
-        </linearGradient>
-        <radialGradient id="eas"><stop offset="0" stopColor="#fff2c4" /><stop offset="0.5" stopColor="#ffb547" stopOpacity="0.7" /><stop offset="1" stopColor="#ffb547" stopOpacity="0" /></radialGradient>
-        <linearGradient id="eap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#b9a6ff" /><stop offset="1" stopColor="#6b4fe0" /></linearGradient>
-      </defs>
-      <rect width="520" height="480" fill="url(#ea)" />
-      <Stars n={60} w={520} h={480} maxY={0.55} seed={3} />
-      <circle cx="420" cy="520" r="230" fill="url(#eas)" />
-      <g transform="translate(130 140)">
-        <circle r="54" fill="url(#eap)" />
-        <ellipse rx="92" ry="18" fill="none" stroke="#e7defe" strokeWidth="6" transform="rotate(-16)" opacity="0.9" />
+      <rect width="520" height="480" fill="#12627f" />
+      <g fill="none" stroke="#ffffff" strokeOpacity="0.09" strokeWidth="1.2">{cells}</g>
+      <g fill="#ffffff" fillOpacity="0.22">
+        {[[117, 132], [195, 198], [273, 132], [351, 264], [117, 330], [429, 66]].map(([x, y]) => <circle key={x + '' + y} cx={x} cy={y} r="4" />)}
       </g>
-      <circle cx="380" cy="90" r="22" fill="#f6f2e6" /><circle cx="388" cy="84" r="20" fill="#2b4ea6" opacity="0.92" />
-      <g fill="#fff" opacity="0.95"><circle cx="300" cy="360" r="22" /><circle cx="330" cy="346" r="30" /><circle cx="364" cy="362" r="22" /><rect x="282" y="360" width="104" height="24" rx="12" /></g>
-      <g fill="#fff" opacity="0.7"><circle cx="90" cy="400" r="16" /><circle cx="112" cy="390" r="22" /><circle cx="136" cy="402" r="15" /><rect x="76" y="400" width="74" height="18" rx="9" /></g>
-      <path d="M0 450 C 120 420, 260 460, 380 438 S 520 430, 520 440 L520 480 L0 480 Z" fill="#fff" opacity="0.35" />
+      <g transform="translate(260 250)" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M-22 -58h44M-14 -58v40L-46 36a10 10 0 0 0 8.6 15h74.8A10 10 0 0 0 46 36L14 -18v-40" />
+        <path d="M-34 16h68" strokeOpacity="0.6" />
+        <circle cx="-10" cy="32" r="4" fill="#ffffff" stroke="none" />
+        <circle cx="10" cy="26" r="3" fill="#ffffff" stroke="none" />
+      </g>
     </svg>
   )
 }

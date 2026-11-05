@@ -87,7 +87,7 @@ function buildAtmosphere(scene) {
   const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.MeshStandardMaterial({ map: earthTexture(), roughness: 0.85 }))
   earth.userData.key = 'earth'
   scene.add(earth)
-  const shells = [['tropo', 1.13, '#7dd3fc'], ['strato', 1.3, '#38bdf8'], ['meso', 1.47, '#818cf8'], ['thermo', 1.66, '#c084fc'], ['exo', 1.88, '#f0abfc']]
+  const shells = [['tropo', 1.13, '#7cc6e8'], ['strato', 1.3, '#4aa3cf'], ['meso', 1.47, '#2f7fb0'], ['thermo', 1.66, '#1f5f8f'], ['exo', 1.88, '#173f66']]
   const pick = [earth], anchors = { earth: { obj: earth, at: new THREE.Vector3(-0.3, -0.75, 0.6) } }, mats = {}
   let prev = 1
   shells.forEach(([key, r, col], i) => {
@@ -422,6 +422,7 @@ function hexToRgba(hex) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},1)`
 }
 
+const DARK = new Set(['solar', 'galaxy'])
 const BUILDERS = { atmosphere: buildAtmosphere, fronts: buildFronts, solar: buildSolar, galaxy: buildGalaxy }
 
 /* ---------------- المكوّن */
@@ -455,7 +456,7 @@ export default function Scene3D({ model }) {
     renderer.outputColorSpace = THREE.SRGBColorSpace
     el.prepend(renderer.domElement)
     const scene = new THREE.Scene()
-    scene.add(starfield())
+    if (DARK.has(model.kind)) scene.add(starfield())
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200)
     const built = build(scene)
     camera.position.set(...built.camera)
@@ -569,7 +570,7 @@ export default function Scene3D({ model }) {
   if (!ok) return null
 
   return (
-    <section className="model3d">
+    <section className={`model3d ${DARK.has(model.kind) ? 'dark' : ''}`}>
       <div className="m3-stage" ref={host}>
         <div className="m3-labels" aria-hidden={!showLabels} style={{ visibility: showLabels ? 'visible' : 'hidden' }}>
           {parts.map((p) => (
@@ -583,7 +584,7 @@ export default function Scene3D({ model }) {
           <button onClick={() => setShowLabels((x) => !x)} aria-label="الأسماء" className={showLabels ? 'on' : ''}>Aa</button>
           <button onClick={() => { api.current.reset?.(); setSel(null) }} aria-label="إعادة الضبط">⟲</button>
         </div>
-        <span className="m3-badge"><Icon name="spark" size={14} /> نموذج ثلاثي الأبعاد · {title}</span>
+        <span className="m3-badge">نموذج ثلاثي الأبعاد · {title}</span>
       </div>
       <aside className="m3-info">
         {current ? (
