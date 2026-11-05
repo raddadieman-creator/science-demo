@@ -119,6 +119,161 @@ function buildAtmosphere(scene) {
   }
 }
 
+function buildFronts(scene) {
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75))
+  const dl = new THREE.DirectionalLight(0xffffff, 1.6)
+  dl.position.set(-3, 6, 5)
+  scene.add(dl)
+  const r = seeded(13)
+  const frontX = (y) => -0.6 + y * 2.15 // سطح الإسفين البارد
+  const pick = [], anchors = {}, mats = {}
+
+  // الأرض
+  const ground = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.35, 4.6), new THREE.MeshStandardMaterial({ color: '#5c9e5a', roughness: 1 }))
+  ground.position.y = -0.175
+  scene.add(ground)
+  const soil = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.25, 4.6), new THREE.MeshStandardMaterial({ color: '#8a6a45', roughness: 1 }))
+  soil.position.y = -0.47
+  scene.add(soil)
+
+  // الكتلة الباردة: إسفين
+  const shape = new THREE.Shape()
+  shape.moveTo(-0.6, 0)
+  shape.lineTo(5.25, 0)
+  shape.lineTo(5.25, (5.25 + 0.6) / 2.15)
+  shape.lineTo(-0.6, 0)
+  const cold = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 4.4, bevelEnabled: false }),
+    new THREE.MeshPhongMaterial({ color: '#3b82f6', transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide, emissive: '#1d4ed8', emissiveIntensity: 0.2 }))
+  cold.position.z = -2.2
+  cold.userData.key = 'cold'
+  scene.add(cold); pick.push(cold); mats.cold = cold.material
+  anchors.cold = { obj: scene, at: new THREE.Vector3(4.9, 0.45, 1.9) }
+
+  // الكتلة الدافئة: حجم شفاف يسار الجبهة
+  const warm = new THREE.Mesh(new THREE.BoxGeometry(4.6, 3.2, 4.4), new THREE.MeshPhongMaterial({ color: '#fb923c', transparent: true, opacity: 0.1, depthWrite: false, emissive: '#f97316', emissiveIntensity: 0.15 }))
+  warm.position.set(-2.95, 1.6, 0)
+  warm.userData.key = 'warm'
+  scene.add(warm); pick.push(warm); mats.warm = warm.material
+  anchors.warm = { obj: scene, at: new THREE.Vector3(-3.6, 1.1, 1.2) }
+
+  // رمز الجبهة على الأرض
+  const line = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.03, 4.4), new THREE.MeshBasicMaterial({ color: '#1d4ed8' }))
+  line.position.set(-0.6, 0.02, 0)
+  scene.add(line)
+  for (let z = -1.9; z <= 1.9; z += 0.95) {
+    const tri = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.3, 3), new THREE.MeshBasicMaterial({ color: '#1d4ed8' }))
+    tri.rotation.z = Math.PI / 2
+    tri.position.set(-0.78, 0.05, z)
+    scene.add(tri)
+  }
+  const frontHit = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.3, 4.4), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
+  frontHit.position.set(-0.7, 0.1, 0)
+  frontHit.userData.key = 'front'
+  scene.add(frontHit); pick.push(frontHit)
+  anchors.front = { obj: scene, at: new THREE.Vector3(-0.8, 0.15, 2.3) }
+
+  // جزيئات الهواء الدافئ: تتقدم ثم تصعد فوق الإسفين
+  const NW = 360, wpos = new Float32Array(NW * 3)
+  const wz = new Float32Array(NW)
+  const resetW = (i) => { wpos[i * 3] = -5 + r() * 3; wpos[i * 3 + 1] = 0.15 + r() * 0.9; wz[i] = (r() - 0.5) * 4; wpos[i * 3 + 2] = wz[i] }
+  for (let i = 0; i < NW; i++) { resetW(i); wpos[i * 3] += r() * 4 }
+  const wg = new THREE.BufferGeometry()
+  wg.setAttribute('position', new THREE.BufferAttribute(wpos, 3))
+  scene.add(new THREE.Points(wg, new THREE.PointsMaterial({ color: '#ff9a3c', size: 0.07, transparent: true, opacity: 0.9 })))
+  const risingHit = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 4.4), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
+  risingHit.position.set(frontX(1.6) - 0.4, 1.6, 0)
+  risingHit.userData.key = 'rising'
+  scene.add(risingHit); pick.push(risingHit)
+  anchors.rising = { obj: scene, at: new THREE.Vector3(frontX(1.2) - 0.3, 1.2, 1.9) }
+
+  // جزيئات الهواء البارد: تندفع نحو اليسار قرب الأرض
+  const NC = 200, cpos = new Float32Array(NC * 3)
+  const resetC = (i) => { cpos[i * 3] = 5.1; cpos[i * 3 + 1] = 0.08 + r() * 0.5; cpos[i * 3 + 2] = (r() - 0.5) * 4 }
+  for (let i = 0; i < NC; i++) { resetC(i); cpos[i * 3] -= r() * 5 }
+  const cg = new THREE.BufferGeometry()
+  cg.setAttribute('position', new THREE.BufferAttribute(cpos, 3))
+  scene.add(new THREE.Points(cg, new THREE.PointsMaterial({ color: '#bfe0ff', size: 0.06, transparent: true, opacity: 0.9 })))
+
+  // الغيمة الركامية الرعدية
+  const cloud = new THREE.Group()
+  const cmat = new THREE.MeshStandardMaterial({ color: '#eef2f8', roughness: 1, emissive: '#000000' })
+  const puffs = [[0, 0, 0, 0.9], [0.9, 0.1, 0.3, 0.75], [-0.8, 0.05, -0.2, 0.7], [0.3, 0.75, 0, 0.8], [-0.3, 1.35, 0.1, 0.65], [0.4, 1.8, -0.1, 0.55], [1.2, 1.95, 0, 0.5], [-0.6, 1.95, 0.1, 0.5], [0.2, 0.1, -0.9, 0.7], [0.1, 0.1, 0.95, 0.7]]
+  for (const [x, y, z, s] of puffs) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(s, 24, 16), cmat)
+    m.position.set(x, y, z)
+    m.userData.key = 'cloud'
+    cloud.add(m); pick.push(m)
+  }
+  const anvil = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.0, 0.35, 32), cmat)
+  anvil.position.y = 2.35
+  anvil.userData.key = 'cloud'
+  cloud.add(anvil); pick.push(anvil)
+  cloud.position.set(3.5, 3.05, 0)
+  cloud.scale.setScalar(0.72)
+  scene.add(cloud)
+  mats.cloud = cmat
+  anchors.cloud = { obj: cloud, at: new THREE.Vector3(0, 2.8, 0) }
+
+  // المطر
+  const NR = 260, rpos = new Float32Array(NR * 3)
+  const resetR = (i) => { rpos[i * 3] = 2.6 + r() * 1.9; rpos[i * 3 + 1] = 2.6 + r() * 0.3; rpos[i * 3 + 2] = (r() - 0.5) * 1.6 }
+  for (let i = 0; i < NR; i++) { resetR(i); rpos[i * 3 + 1] -= r() * 2.6 }
+  const rg = new THREE.BufferGeometry()
+  rg.setAttribute('position', new THREE.BufferAttribute(rpos, 3))
+  scene.add(new THREE.Points(rg, new THREE.PointsMaterial({ color: '#7cc4ff', size: 0.05 })))
+  const rainHit = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.4, 1.8), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }))
+  rainHit.position.set(3.5, 1.5, 0)
+  rainHit.userData.key = 'rain'
+  scene.add(rainHit); pick.push(rainHit)
+  anchors.rain = { obj: scene, at: new THREE.Vector3(3.3, 2.35, 1.1) }
+
+  // البرق
+  const bolt = new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(3.60, 2.7, 0.4), new THREE.Vector3(3.35, 2.1, 0.4), new THREE.Vector3(3.65, 1.9, 0.4),
+    new THREE.Vector3(3.30, 1.2, 0.4), new THREE.Vector3(3.55, 1.0, 0.4), new THREE.Vector3(3.20, 0.3, 0.4),
+  ]), new THREE.LineBasicMaterial({ color: '#ffe66d' }))
+  bolt.visible = false
+  scene.add(bolt)
+  const flash = glowSprite('rgba(255,236,140,1)', 2.4)
+  flash.position.set(3.45, 1.6, 0.4)
+  flash.visible = false
+  scene.add(flash)
+  let flashUntil = 0
+
+  return {
+    camera: [-2.2, 4.4, 12.5],
+    target: [1.0, 1.7, 0],
+    pick, anchors,
+    update(t, dt, play) {
+      if (!play) return
+      for (let i = 0; i < NW; i++) {
+        const x = wpos[i * 3], y = wpos[i * 3 + 1]
+        if (x < frontX(y) - 0.12) wpos[i * 3] += dt * 1.1
+        else { wpos[i * 3 + 1] += dt * 1.0; wpos[i * 3] = frontX(wpos[i * 3 + 1]) - 0.12 - r() * 0.05 }
+        if (wpos[i * 3 + 1] > 3.0) resetW(i)
+      }
+      wg.attributes.position.needsUpdate = true
+      for (let i = 0; i < NC; i++) {
+        cpos[i * 3] -= dt * 1.2
+        if (cpos[i * 3] < -0.4) resetC(i)
+      }
+      cg.attributes.position.needsUpdate = true
+      for (let i = 0; i < NR; i++) {
+        rpos[i * 3 + 1] -= dt * 3.2
+        if (rpos[i * 3 + 1] < 0.02) resetR(i)
+      }
+      rg.attributes.position.needsUpdate = true
+      if (t > flashUntil + 1.2 && r() < 0.012) flashUntil = t + 0.14
+      bolt.visible = flash.visible = t < flashUntil
+    },
+    highlight(key) {
+      mats.cold.opacity = key === 'cold' ? 0.5 : 0.28
+      mats.warm.opacity = key === 'warm' ? 0.32 : 0.1
+      mats.cloud.emissive.set(key === 'cloud' ? '#3a5fcf' : '#000000')
+    },
+  }
+}
+
 function buildSolar(scene) {
   scene.add(new THREE.AmbientLight(0xffffff, 0.28))
   scene.add(new THREE.PointLight(0xffffff, 3.2, 0, 0))
@@ -267,7 +422,7 @@ function hexToRgba(hex) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},1)`
 }
 
-const BUILDERS = { atmosphere: buildAtmosphere, solar: buildSolar, galaxy: buildGalaxy }
+const BUILDERS = { atmosphere: buildAtmosphere, fronts: buildFronts, solar: buildSolar, galaxy: buildGalaxy }
 
 /* ---------------- المكوّن */
 export default function Scene3D({ model }) {
@@ -276,7 +431,7 @@ export default function Scene3D({ model }) {
   const api = useRef({})
   const [sel, setSel] = useState(null)
   const [play, setPlay] = useState(() => !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)
-  const [showLabels, setShowLabels] = useState(true)
+  const [showLabels, setShowLabels] = useState(() => (window.innerWidth || 1000) > 640)
   const [ok, setOk] = useState(true)
   const playRef = useRef(play)
   playRef.current = play
@@ -305,10 +460,13 @@ export default function Scene3D({ model }) {
     const built = build(scene)
     camera.position.set(...built.camera)
     const controls = new OrbitControls(camera, renderer.domElement)
+    const target = new THREE.Vector3(...(built.target || [0, 0, 0]))
+    controls.target.copy(target)
     controls.enableDamping = true
     controls.enablePan = false
     controls.enableZoom = false
     controls.rotateSpeed = 0.7
+    const homeOff = camera.position.clone().sub(target)
     const home = camera.position.clone()
 
     const size = () => {
@@ -318,6 +476,10 @@ export default function Scene3D({ model }) {
       renderer.domElement.style.height = '100%'
       camera.aspect = w / h
       camera.updateProjectionMatrix()
+      // الشاشات الضيقة تحتاج الكاميرا أبعد قليلًا حتى يظهر النموذج كاملًا
+      const f = Math.max(1, Math.pow(1.35 / camera.aspect, 0.8))
+      home.copy(target).add(homeOff.clone().multiplyScalar(f))
+      camera.position.copy(home)
     }
     size()
     const ro = new ResizeObserver(size)
@@ -380,8 +542,8 @@ export default function Scene3D({ model }) {
 
     api.current = {
       highlight: built.highlight,
-      reset: () => { camera.position.copy(home); controls.target.set(0, 0, 0) },
-      zoom: (f) => { camera.position.multiplyScalar(f); const d = camera.position.length(); if (d < 1.5 || d > 40) camera.position.multiplyScalar(1 / f) },
+      reset: () => { camera.position.copy(home); controls.target.copy(target) },
+      zoom: (f) => { const off = camera.position.clone().sub(controls.target).multiplyScalar(f); const d = off.length(); if (d > 1.5 && d < 40) camera.position.copy(controls.target).add(off) },
     }
 
     return () => {

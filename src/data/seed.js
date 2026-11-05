@@ -86,6 +86,7 @@ export const LESSONS = [
     title: 'الكتل والجبهات الهوائية',
     summary: 'كيف تتحرك كتل الهواء وتلتقي، ولماذا تجلب الجبهات المطر والعواصف.',
     illustration: 'fronts',
+    model: { kind: 'fronts', parts: MODEL_PARTS.fronts.parts.map((p) => ({ ...p })) },
     sections: [
       {
         heading: 'الكتل الهوائية',
