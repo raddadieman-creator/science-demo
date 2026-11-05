@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { LEVELS } from '../config.js'
 import Icon from '../components/Icons.jsx'
 import { Ring } from '../components/Art.jsx'
 import { recordResult } from '../lib/mine.js'
+import QuestionView, { TYPE_LABEL } from './QuestionView.jsx'
 
-const LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و']
 
 export function groupScore(answers, key) {
   const m = new Map()
@@ -51,25 +51,13 @@ export default function Quiz({ store, data, id, student, go, challenge }) {
   const [saveErr, setSaveErr] = useState('')
   const [board, setBoard] = useState(null)
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if (finished || !questions[i]) return
-      const n = Number(e.key)
-      if (choice === null && n >= 1 && n <= questions[i].options.length) pick(n - 1)
-      if (choice !== null && e.key === 'Enter') next()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  })
-
   if (!quiz || !questions.length) return <main className="wrap"><div className="empty">لا توجد أسئلة في هذا الاختبار بعد.</div></main>
   const q = questions[i]
   const answered = choice !== null
 
-  function pick(c) {
-    if (answered) return
-    setChoice(c)
-    setAnswers((a) => [...a, { question_id: q.id, choice: c, correct: c === q.correct, concept: q.concept, level: q.level }])
+  function onDone(res) {
+    setChoice(res)
+    setAnswers((a) => [...a, { question_id: q.id, choice: res.choice ?? null, correct: res.correct, concept: q.concept, level: q.level }])
   }
 
   async function next() {
@@ -151,30 +139,8 @@ export default function Quiz({ store, data, id, student, go, challenge }) {
           <div className="progress"><i style={{ width: `${((i + (answered ? 1 : 0)) / questions.length) * 100}%` }} /></div>
         </div>
         <section className="qcard" key={q.id}>
-          <div className="row"><span className="chip primary">{q.level}</span><span className="chip">{q.concept}</span></div>
-          <p className="qtext">{q.text}</p>
-          <div className="options">
-            {q.options.map((o, c) => {
-              let cls = ''
-              if (answered && c === q.correct) cls = 'correct'
-              else if (answered && c === choice) cls = 'wrong'
-              else if (answered) cls = 'dim'
-              return (
-                <button key={c} className={`option ${cls}`} disabled={answered} onClick={() => pick(c)}>
-                  <span className="letter">{LETTERS[c]}</span>
-                  <span>{o}</span>
-                  {cls === 'correct' && <span className="mark"><Icon name="check" /></span>}
-                  {cls === 'wrong' && <span className="mark"><Icon name="x" /></span>}
-                </button>
-              )
-            })}
-          </div>
-          {answered && (
-            <div className={`feedback ${choice === q.correct ? 'good' : 'bad'}`} role="status">
-              <span className="ic"><Icon name={choice === q.correct ? 'check' : 'lightbulb'} /></span>
-              <div><b>{choice === q.correct ? 'إجابة صحيحة!' : 'ليست هذه'}</b><span>{q.explanation}</span></div>
-            </div>
-          )}
+          <div className="row"><span className="chip sun">{TYPE_LABEL[q.type || 'mcq']}</span><span className="chip primary">{q.level}</span><span className="chip">{q.concept}</span></div>
+          <QuestionView q={q} onDone={onDone} />
         </section>
         <div className="row" style={{ justifyContent: 'flex-end' }}>
           <button className="btn btn-primary btn-lg" disabled={!answered} onClick={next}>

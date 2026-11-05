@@ -12,8 +12,10 @@ create table if not exists lessons (
   sections jsonb default '[]'::jsonb,
   key_terms jsonb default '[]'::jsonb,
   activity jsonb,
+  model jsonb,
   created_at timestamptz default now()
 );
+alter table lessons add column if not exists model jsonb;
 
 create table if not exists quizzes (
   id text primary key,
@@ -29,13 +31,23 @@ create table if not exists questions (
   quiz_id text not null references quizzes(id) on delete cascade,
   ord int default 0,
   text text not null,
-  options jsonb not null,
+  type text not null default 'mcq',
+  options jsonb,
   correct int not null default 0,
+  rationales jsonb default '[]'::jsonb,
+  items jsonb,
+  pairs jsonb,
   explanation text default '',
   concept text default '',
   level text default 'تذكّر',
   created_at timestamptz default now()
 );
+
+alter table questions add column if not exists type text not null default 'mcq';
+alter table questions add column if not exists rationales jsonb default '[]'::jsonb;
+alter table questions add column if not exists items jsonb;
+alter table questions add column if not exists pairs jsonb;
+alter table questions alter column options drop not null;
 
 create table if not exists faq (
   id text primary key,

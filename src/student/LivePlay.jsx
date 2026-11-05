@@ -47,7 +47,7 @@ export default function LivePlay({ store, student, data, initialCode }) {
 
   const game = state?.game
   const questions = useMemo(
-    () => (game ? data.questions.filter((q) => q.quiz_id === game.quiz_id).sort((a, b) => a.ord - b.ord) : []),
+    () => (game ? data.questions.filter((q) => q.quiz_id === game.quiz_id).filter((x) => !['order', 'match'].includes(x.type)).sort((a, b) => a.ord - b.ord) : []),
     [game?.quiz_id, data] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const q = game ? questions[game.current_index] : null

@@ -15,7 +15,7 @@ export default function LiveHost({ store, data }) {
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 300); return () => clearInterval(t) }, [])
 
   const game = state?.game
-  const questions = useMemo(() => data.questions.filter((q) => q.quiz_id === (game?.quiz_id || quizId)).sort((a, b) => a.ord - b.ord), [data, game?.quiz_id, quizId])
+  const questions = useMemo(() => data.questions.filter((q) => q.quiz_id === (game?.quiz_id || quizId)).filter((x) => !['order', 'match'].includes(x.type)).sort((a, b) => a.ord - b.ord), [data, game?.quiz_id, quizId])
   const q = game ? questions[game.current_index] : null
   const answersNow = state && game ? state.answers.filter((a) => a.q_index === game.current_index) : []
   const left = game?.status === 'question' && game.question_started_at

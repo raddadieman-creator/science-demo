@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import Icon from '../components/Icons.jsx'
 import { Illustration } from '../components/Illustrations.jsx'
 import { activityDone, checkAnswer, markActivity, markLesson, markVideo, saveCheck, videoSeen } from '../lib/mine.js'
 import { track } from '../lib/track.js'
 import { ORD, themeFor, ytThumb } from '../lib/theme.js'
+
+const Scene3D = lazy(() => import('../components/Scene3D.jsx'))
 
 export function VideoCard({ video, onOpen, compact }) {
   const [seen, setSeen] = useState(() => videoSeen(video.url))
@@ -45,9 +47,10 @@ function QuickCheck({ id, check }) {
         })}
       </div>
       {done && (
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <p className="why">{pick === check.correct ? 'أحسنتِ! ' : ''}{check.why}</p>
-          {pick !== check.correct && <button className="btn btn-ghost btn-sm" onClick={() => { setPick(null); saveCheck(id, null) }}>أعيدي المحاولة</button>}
+        <div className="why-list">
+          {pick !== check.correct && check.whys?.[pick] && <div className="why-row bad"><b>لماذا ليست «{check.options[pick]}»؟</b><span>{check.whys[pick]}</span></div>}
+          <div className="why-row good"><b>{pick === check.correct ? 'أحسنتِ!' : `الصواب «${check.options[check.correct]}»`}</b><span>{check.why}</span></div>
+          {pick !== check.correct && <button className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => { setPick(null); saveCheck(id, null) }}>أعيدي المحاولة</button>}
         </div>
       )}
     </div>
@@ -106,8 +109,6 @@ export default function Lesson({ data, id, go, store, student }) {
 
   return (
     <main className="wrap" style={{ '--c': t.c }}>
-      <button className="back" onClick={() => go('home')}><Icon name="arrowR" /> كل الدروس</button>
-
       <section className="lesson-hero" style={{ '--c': t.c }}>
         <div className="txt">
           <span className="eyebrow">الدرس {ORD[idx] || idx + 1} · {lesson.unit}</span>
@@ -120,6 +121,12 @@ export default function Lesson({ data, id, go, store, student }) {
         </div>
         {lesson.illustration && <div className="fig"><Illustration name={lesson.illustration} /></div>}
       </section>
+
+      {lesson.model?.kind && (
+        <Suspense fallback={<div className="m3-stage" style={{ borderRadius: 26 }} />}>
+          <Scene3D model={lesson.model} />
+        </Suspense>
+      )}
 
       <div className="lesson-layout">
         <nav className="toc" aria-label="محتويات الدرس">

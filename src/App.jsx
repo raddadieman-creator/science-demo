@@ -54,19 +54,31 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => { if (store && student) track(store, student, 'login') }, [store, student])
+  // سجل التنقل: زر الرجوع في الموقع وزر الرجوع في المتصفح يعملان معًا
   useEffect(() => {
-    const onHash = () => { if (location.hash === '#teacher') setRoute({ view: 'teacher' }) }
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
-  }, [])
+    try { history.replaceState({ route: { view: route.view } }, '') } catch {}
+    const onPop = (e) => {
+      const r = e.state?.route || { view: location.hash === '#teacher' ? 'teacher' : 'home' }
+      setRoute(r)
+      setChatOpen(false)
+      window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const go = (view, id, extra) => {
-    setRoute({ view, id, ...extra })
+    const r = { view, id, ...extra }
+    setRoute(r)
     setChatOpen(false)
-    if (view === 'teacher') { try { history.replaceState(null, '', '#teacher') } catch {} }
-    else if (location.hash === '#teacher') { try { history.replaceState(null, '', location.pathname + location.search) } catch {} }
+    const url = view === 'teacher' ? '#teacher' : location.pathname + location.search
+    try { history.pushState({ route: r }, '', url) } catch {}
     window.scrollTo({ top: 0 })
     bump((n) => n + 1)
+  }
+  const back = () => {
+    if (history.state?.route && history.length > 1) history.back()
+    else go('home')
   }
 
   const isTeacher = route.view === 'teacher'
@@ -116,6 +128,12 @@ export default function App() {
         </div>
       </header>
 
+      {route.view !== 'home' && (
+        <div className="wrap crumbs">
+          <button onClick={back}><Icon name="arrowR" /> رجوع</button>
+          <button onClick={() => go('home')}><Icon name="home" /> الرئيسية</button>
+        </div>
+      )}
       {error && <div className="wrap" style={{ paddingTop: 16 }}><div className="notice error" role="alert">{error}</div></div>}
 
       {isTeacher ? (

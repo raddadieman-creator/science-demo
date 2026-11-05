@@ -30,7 +30,7 @@ export function boardFrom(attempts) {
 
 // ---------------------------------------------------------------- محلي
 function createLocalStore() {
-  const KEY = 'mukhtabari:v2'
+  const KEY = 'mukhtabari:v3'
   let mem = null
 
   const fresh = () => ({

@@ -4,43 +4,108 @@ import { uid } from '../lib/store.js'
 
 const LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و']
 
+const TYPES = [['mcq', 'اختيار من متعدد'], ['tf', 'صواب أم خطأ'], ['fill', 'أكملي الفراغ'], ['order', 'ترتيب'], ['match', 'مزاوجة']]
+
+function normalizeType(q, type) {
+  const base = { ...q, type }
+  if (type === 'tf') return { ...base, options: ['صح', 'خطأ'], correct: q.correct === 1 ? 1 : 0, rationales: [] }
+  if (type === 'order') return { ...base, items: q.items?.length ? q.items : ['', '', ''] }
+  if (type === 'match') return { ...base, pairs: q.pairs?.length ? q.pairs : [['', ''], ['', ''], ['', '']] }
+  const options = q.options?.length && q.type !== 'tf' ? q.options : ['', '', '', '']
+  return { ...base, options, rationales: q.rationales?.length === options.length ? q.rationales : options.map(() => '') }
+}
+
 function QuestionForm({ initial, concepts, onSave, onCancel }) {
-  const [q, setQ] = useState(initial)
+  const [q, setQ] = useState(() => normalizeType(initial, initial.type || 'mcq'))
   const [err, setErr] = useState('')
   const set = (k, v) => setQ((x) => ({ ...x, [k]: v }))
-  const setOpt = (i, v) => set('options', q.options.map((o, j) => (j === i ? v : o)))
+  const setAt = (k, i, v) => setQ((x) => ({ ...x, [k]: x[k].map((o, j) => (j === i ? v : o)) }))
+  const isOpt = ['mcq', 'fill'].includes(q.type)
 
   const save = (e) => {
     e.preventDefault()
-    const options = q.options.map((o) => o.trim())
     if (!q.text.trim()) return setErr('اكتبي نص السؤال.')
-    if (options.some((o) => !o)) return setErr('أكملي كل الخيارات أو احذفي الخيار الفارغ.')
-    if (!q.concept.trim()) return setErr('حدّدي المفهوم الذي يقيسه السؤال، فعليه تُبنى تقارير التعزيز.')
-    onSave({ ...q, text: q.text.trim(), options, concept: q.concept.trim(), explanation: q.explanation.trim() })
+    if (q.type === 'fill' && !q.text.includes('____')) return setErr('ضعي مكان الفراغ أربع شرطات سفلية: ____')
+    if (isOpt && q.options.some((o) => !o.trim())) return setErr('أكملي كل الخيارات أو احذفي الخيار الفارغ.')
+    if (q.type === 'order' && q.items.filter((x) => x.trim()).length < 3) return setErr('اكتبي ثلاث عبارات على الأقل بترتيبها الصحيح.')
+    if (q.type === 'match' && q.pairs.filter((p) => p[0].trim() && p[1].trim()).length < 3) return setErr('اكتبي ثلاثة أزواج على الأقل.')
+    if (!q.concept.trim()) return setErr('حدّدي المفهوم الذي يقيسه السؤال.')
+    const out = { ...q, text: q.text.trim(), concept: q.concept.trim(), explanation: (q.explanation || '').trim() }
+    if (isOpt) { out.options = q.options.map((o) => o.trim()); out.rationales = q.rationales.map((r) => (r || '').trim()) }
+    if (q.type === 'order') out.items = q.items.map((x) => x.trim()).filter(Boolean)
+    if (q.type === 'match') out.pairs = q.pairs.map((p) => [p[0].trim(), p[1].trim()]).filter((p) => p[0] && p[1])
+    onSave(out)
   }
 
   return (
     <form className="panel stack" onSubmit={save} style={{ borderColor: 'var(--primary)' }}>
-      <h3>{initial._new ? 'سؤال جديد' : 'تعديل السؤال'}</h3>
-      <label className="field" htmlFor="qf-text">نص السؤال
+      <div className="spread">
+        <h3>{initial._new ? 'سؤال جديد' : 'تعديل السؤال'}</h3>
+        <select className="input" style={{ width: 'auto' }} value={q.type} onChange={(e) => setQ((x) => normalizeType(x, e.target.value))} aria-label="نوع السؤال">
+          {TYPES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+        </select>
+      </div>
+      <label className="field" htmlFor="qf-text">{q.type === 'tf' ? 'العبارة' : q.type === 'fill' ? 'الجملة (ضعي ____ مكان الفراغ)' : 'نص السؤال'}
         <textarea id="qf-text" className="input" value={q.text} onChange={(e) => set('text', e.target.value)} />
       </label>
-      <div className="stack" style={{ gap: 8 }}>
-        <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>الخيارات (اختاري الإجابة الصحيحة)</span>
-        {q.options.map((o, i) => (
-          <div key={i} className="opt-row">
-            <label className="radio"><input type="radio" name="qf-correct" checked={q.correct === i} onChange={() => set('correct', i)} /> {LETTERS[i]}</label>
-            <input id={`qf-opt-${i}`} className="input" value={o} onChange={(e) => setOpt(i, e.target.value)} aria-label={`الخيار ${LETTERS[i]}`} />
-            {q.options.length > 2 && (
-              <button type="button" className="btn btn-sm btn-ghost btn-danger" onClick={() => {
-                const options = q.options.filter((_, j) => j !== i)
-                setQ((x) => ({ ...x, options, correct: x.correct === i ? 0 : x.correct > i ? x.correct - 1 : x.correct }))
-              }}>حذف</button>
-            )}
-          </div>
-        ))}
-        {q.options.length < 4 && <button type="button" className="btn btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set('options', [...q.options, ''])}>إضافة خيار</button>}
-      </div>
+
+      {q.type === 'tf' && (
+        <div className="row">
+          <label className="radio"><input type="radio" name="qf-tf" checked={q.correct === 0} onChange={() => set('correct', 0)} /> العبارة صحيحة</label>
+          <label className="radio"><input type="radio" name="qf-tf" checked={q.correct === 1} onChange={() => set('correct', 1)} /> العبارة خطأ</label>
+        </div>
+      )}
+
+      {isOpt && (
+        <div className="stack" style={{ gap: 10 }}>
+          <span className="small" style={{ fontWeight: 600 }}>الخيارات: حدّدي الصحيح، واكتبي سبب خطأ كل خيار آخر</span>
+          {q.options.map((o, i) => (
+            <div key={i} className="item" style={{ padding: 10 }}>
+              <div className="opt-row">
+                <label className="radio"><input type="radio" name="qf-correct" checked={q.correct === i} onChange={() => set('correct', i)} /> {LETTERS[i]}</label>
+                <input id={`qf-opt-${i}`} className="input" value={o} onChange={(e) => setAt('options', i, e.target.value)} aria-label={`الخيار ${LETTERS[i]}`} />
+                {q.options.length > 2 && (
+                  <button type="button" className="btn btn-sm btn-ghost btn-danger" onClick={() => setQ((x) => ({
+                    ...x, options: x.options.filter((_, j) => j !== i), rationales: x.rationales.filter((_, j) => j !== i),
+                    correct: x.correct === i ? 0 : x.correct > i ? x.correct - 1 : x.correct,
+                  }))}>حذف</button>
+                )}
+              </div>
+              {q.correct !== i && <input className="input" value={q.rationales[i] || ''} onChange={(e) => setAt('rationales', i, e.target.value)} placeholder="لماذا هذا الخيار خطأ؟" aria-label={`تبرير الخيار ${LETTERS[i]}`} />}
+            </div>
+          ))}
+          {q.options.length < 4 && <button type="button" className="btn btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setQ((x) => ({ ...x, options: [...x.options, ''], rationales: [...x.rationales, ''] }))}>إضافة خيار</button>}
+        </div>
+      )}
+
+      {q.type === 'order' && (
+        <div className="stack" style={{ gap: 8 }}>
+          <span className="small" style={{ fontWeight: 600 }}>العبارات بترتيبها الصحيح (تُخلط للطالبة تلقائيًا)</span>
+          {q.items.map((it, i) => (
+            <div key={i} className="opt-row">
+              <span className="chip num">{i + 1}</span>
+              <input className="input" value={it} onChange={(e) => setAt('items', i, e.target.value)} aria-label={`العبارة ${i + 1}`} />
+              {q.items.length > 3 && <button type="button" className="btn btn-sm btn-ghost btn-danger" onClick={() => set('items', q.items.filter((_, j) => j !== i))}>حذف</button>}
+            </div>
+          ))}
+          {q.items.length < 7 && <button type="button" className="btn btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set('items', [...q.items, ''])}>إضافة عبارة</button>}
+        </div>
+      )}
+
+      {q.type === 'match' && (
+        <div className="stack" style={{ gap: 8 }}>
+          <span className="small" style={{ fontWeight: 600 }}>الأزواج الصحيحة (يُخلط العمود الثاني للطالبة)</span>
+          {q.pairs.map((p, i) => (
+            <div key={i} className="opt-row">
+              <input className="input" value={p[0]} onChange={(e) => setAt('pairs', i, [e.target.value, p[1]])} aria-label={`المصطلح ${i + 1}`} />
+              <input className="input" value={p[1]} onChange={(e) => setAt('pairs', i, [p[0], e.target.value])} aria-label={`المعنى ${i + 1}`} />
+              {q.pairs.length > 3 && <button type="button" className="btn btn-sm btn-ghost btn-danger" onClick={() => set('pairs', q.pairs.filter((_, j) => j !== i))}>حذف</button>}
+            </div>
+          ))}
+          {q.pairs.length < 6 && <button type="button" className="btn btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set('pairs', [...q.pairs, ['', '']])}>إضافة زوج</button>}
+        </div>
+      )}
+
       <div className="form-grid">
         <label className="field" htmlFor="qf-concept">المفهوم
           <input id="qf-concept" className="input" list="concepts-list" value={q.concept} onChange={(e) => set('concept', e.target.value)} />
@@ -52,8 +117,8 @@ function QuestionForm({ initial, concepts, onSave, onCancel }) {
           </select>
         </label>
       </div>
-      <label className="field" htmlFor="qf-exp">التغذية الراجعة (تظهر للطالبة بعد الإجابة)
-        <textarea id="qf-exp" className="input" value={q.explanation} onChange={(e) => set('explanation', e.target.value)} />
+      <label className="field" htmlFor="qf-exp">تبرير الإجابة الصحيحة
+        <textarea id="qf-exp" className="input" value={q.explanation || ''} onChange={(e) => set('explanation', e.target.value)} />
       </label>
       {err && <div className="notice error" role="alert">{err}</div>}
       <div className="row">
@@ -89,7 +154,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
           </select>
         </label>
         <div className="row">
-          <button className="btn btn-primary" disabled={!quiz} onClick={() => setEditing({ _new: true, id: uid(), quiz_id: quizId, ord: (qs.at(-1)?.ord || 0) + 1, text: '', options: ['', '', '', ''], correct: 0, explanation: '', concept: '', level: LEVELS[0] })}>إضافة سؤال</button>
+          <button className="btn btn-primary" disabled={!quiz} onClick={() => setEditing({ _new: true, id: uid(), quiz_id: quizId, ord: (qs.at(-1)?.ord || 0) + 1, type: 'mcq', text: '', options: ['', '', '', ''], rationales: ['', '', '', ''], correct: 0, explanation: '', concept: '', level: LEVELS[0] })}>إضافة سؤال</button>
           <button className="btn" onClick={() => setNewQuiz({ id: uid(), title: '', description: '', lesson_id: '', ord: data.quizzes.length + 1 })}>اختبار جديد</button>
         </div>
       </div>
@@ -123,7 +188,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
         {qs.map((q, i) => (
           <div key={q.id} className="item">
             <div className="spread">
-              <div className="row"><b className="num">{i + 1}.</b><span className="chip primary">{q.level}</span><span className="chip">{q.concept}</span></div>
+              <div className="row"><b className="num">{i + 1}.</b><span className="chip sun">{TYPES.find((t) => t[0] === (q.type || 'mcq'))?.[1]}</span><span className="chip primary">{q.level}</span><span className="chip">{q.concept}</span></div>
               <div className="row">
                 <button className="btn btn-sm" onClick={() => setEditing(q)}>تعديل</button>
                 {confirm === q.id ? (
@@ -135,7 +200,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
               </div>
             </div>
             <p style={{ fontWeight: 700 }}>{q.text}</p>
-            <p className="small muted">الإجابة: {q.options[q.correct]}</p>
+            <p className="small muted">{q.type === 'order' ? q.items?.join(' ← ') : q.type === 'match' ? q.pairs?.map((p) => p[0] + ' ↔ ' + p[1]).join(' · ') : `الإجابة: ${q.options?.[q.correct]}`}</p>
           </div>
         ))}
       </div>
