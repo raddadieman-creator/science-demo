@@ -68,13 +68,12 @@ export default function Overview({ data, attempts, sq, goTab }) {
           )}
           <div className="two">
             <div className="panel stack" style={{ boxShadow: 'none' }}>
-              <div className="spread"><h3>إتقان المفاهيم</h3><span className="small muted">الأضعف أولًا · أقل من 60% بلون مميز</span></div>
+              <div className="spread"><h3>إتقان المفاهيم</h3></div>
               <Bars rows={concepts} />
             </div>
             <div className="panel stack" style={{ boxShadow: 'none' }}>
               <h3>حسب مستوى التفكير</h3>
               <Bars rows={levels} />
-              <p className="small muted">نسبة الإجابات الصحيحة في أسئلة كل مستوى. تدنّي «التطبيق» و«التحليل» مع ارتفاع «التذكّر» يعني حفظًا دون فهم كافٍ.</p>
             </div>
           </div>
           {classesSeen.length > 1 && (

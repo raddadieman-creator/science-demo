@@ -24,13 +24,12 @@ export default function Home({ data, student, go, onSwitch }) {
           <span className="eyebrow">فصل {student.class_name}</span>
           <h1>أهلًا {first}، ماذا سنكتشف اليوم؟</h1>
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={onSwitch}>لستِ {first}؟ غيّري الاسم</button>
+        <button className="btn btn-ghost btn-sm" onClick={onSwitch}>تغيير الاسم</button>
       </section>
 
       <form className="join-strip" onSubmit={(e) => { e.preventDefault(); if (code.trim().length === 4) go('live', code.trim()) }}>
         <div className="stack" style={{ gap: 2 }}>
-          <h3>لديك رمز تحدٍّ من المعلمة؟</h3>
-          <span className="small" style={{ opacity: 0.8 }}>اكتبي الرمز المكوّن من أربعة أرقام وادخلي المسابقة.</span>
+          <h3>رمز التحدي المباشر</h3>
         </div>
         <div className="row">
           <label htmlFor="home-code" className="small" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>رمز التحدي</label>

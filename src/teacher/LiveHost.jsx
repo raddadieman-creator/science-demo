@@ -31,7 +31,6 @@ export default function LiveHost({ store, data }) {
     return (
       <div className="panel stack" style={{ maxWidth: 560 }}>
         <h3>بدء مسابقة مباشرة في الحصة</h3>
-        <p className="muted small">اعرضي هذه الصفحة على شاشة الفصل. تدخل الطالبات من أجهزتهن بالرمز، وتظهر الأسئلة بالتتابع مع لوحة صدارة.</p>
         <label className="field" htmlFor="lh-quiz">أسئلة المسابقة
           <select id="lh-quiz" className="input" value={quizId} onChange={(e) => setQuizId(e.target.value)}>
             {data.quizzes.map((x) => <option key={x.id} value={x.id}>{x.title} ({data.questions.filter((y) => y.quiz_id === x.id).length})</option>)}

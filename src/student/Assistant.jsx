@@ -50,7 +50,6 @@ export default function Assistant({ store, data, student, go }) {
           <AtomMark size={44} />
           <div>
             <h1 style={{ fontSize: '1.6rem' }}>{SITE.assistantName}</h1>
-            <p className="small muted">مساعدة العلوم: تلمّح ولا تعطي الحل كاملًا.</p>
           </div>
         </div>
         <div className="msgs" aria-live="polite">

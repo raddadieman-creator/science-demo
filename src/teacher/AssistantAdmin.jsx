@@ -26,7 +26,6 @@ export default function AssistantAdmin({ store, data, sq, reload }) {
     <div className="two">
       <div className="stack">
         <div className="spread"><h3>أسئلة الطالبات التي لم تجد إجابة</h3><span className="chip flame num">{pending.length}</span></div>
-        <p className="small muted">أضيفي إجابة لأي سؤال هنا، فيُضاف إلى بنك {SITE.assistantName} ويجيب عنه تلقائيًا في المرات القادمة.</p>
         <div className="list">
           {pending.length === 0 && <p className="small muted">لا توجد أسئلة جديدة.</p>}
           {pending.map((s) => (

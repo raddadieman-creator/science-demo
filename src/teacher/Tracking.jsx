@@ -112,7 +112,6 @@ export default function Tracking({ data, events, attempts }) {
         <button className="btn btn-primary" disabled={!rows.length} onClick={exportXlsx}>تصدير Excel</button>
       </div>
       {msg && <div className="notice ok" role="status">{msg}</div>}
-      <p className="small muted">المهام المحسوبة لكل طالبة: {P.lessons.length} دروس، و{P.videos.length} فيديو، و{P.withActivity.length} أنشطة، و{P.quizzes.length} اختبارات. اضغطي على أي طالبة لعرض التفاصيل.</p>
 
       {!rows.length ? (
         <div className="panel"><p className="muted">لم تدخل أي طالبة بعد. عندما تكتب الطالبة اسمها وتدخل، تظهر هنا مع تقدمها.</p></div>

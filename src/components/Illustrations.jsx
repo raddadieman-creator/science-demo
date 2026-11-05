@@ -10,11 +10,11 @@ const Glow = ({ id = 'glow', s = 4 }) => (
 
 function Atmosphere() {
   const bands = [
-    { name: 'الإكسوسفير', note: 'تتلاشى في الفضاء', y: 0, h: 44, c: 'rgba(120,150,255,0.10)' },
-    { name: 'الثيرموسفير', note: 'شديدة الحرارة · الأيونوسفير', y: 44, h: 60, c: 'rgba(120,150,255,0.16)' },
-    { name: 'الميزوسفير', note: 'أبرد طبقة · تحترق الشهب', y: 104, h: 56, c: 'rgba(99,230,255,0.13)' },
-    { name: 'الستراتوسفير', note: 'طبقة الأوزون', y: 160, h: 60, c: 'rgba(99,230,255,0.20)' },
-    { name: 'التروبوسفير', note: 'نعيش هنا · الطقس', y: 220, h: 50, c: 'rgba(94,240,166,0.20)' },
+    { name: 'الإكسوسفير', note: 'تتلاشى في الفضاء', y: 0, h: 44, c: '#1f2f5c' },
+    { name: 'الثيرموسفير', note: 'شديدة الحرارة · الأيونوسفير', y: 44, h: 60, c: '#3b5a9a' },
+    { name: 'الميزوسفير', note: 'أبرد طبقة · تحترق الشهب', y: 104, h: 56, c: '#6f9bd6' },
+    { name: 'الستراتوسفير', note: 'طبقة الأوزون', y: 160, h: 60, c: '#a8d1f2' },
+    { name: 'التروبوسفير', note: 'نعيش هنا · الطقس', y: 220, h: 50, c: '#d8eefc' },
   ]
   return (
     <svg viewBox="0 0 360 300" role="img" aria-label="طبقات الغلاف الجوي الخمس من سطح الأرض إلى الفضاء">
@@ -22,33 +22,33 @@ function Atmosphere() {
       {bands.map((b) => (
         <g key={b.name}>
           <rect x="0" y={b.y} width="360" height={b.h} fill={b.c} />
-          <line x1="0" y1={b.y} x2="360" y2={b.y} stroke="var(--line)" strokeDasharray="3 5" />
-          <text x="350" y={b.y + b.h / 2 - 2} textAnchor="end" fontSize="14" fill="var(--ink)" style={T}>{b.name}</text>
-          <text x="350" y={b.y + b.h / 2 + 15} textAnchor="end" fontSize="11" fill="var(--muted)" style={{ ...T, fontWeight: 400 }}>{b.note}</text>
+          
+          <text x="350" y={b.y + b.h / 2 - 2} textAnchor="start" fontSize="14" fill={b.y < 150 ? '#ffffff' : '#13213b'} style={T}>{b.name}</text>
+          <text x="350" y={b.y + b.h / 2 + 15} textAnchor="start" fontSize="11" fill={b.y < 150 ? '#dbe7ff' : '#3c4d6b'} style={{ ...T, fontWeight: 400 }}>{b.note}</text>
         </g>
       ))}
       {/* قمر اصطناعي */}
-      <g transform="translate(70 22)" fill="var(--accent)">
+      <g transform="translate(70 22)" fill="#ffd166">
         <rect x="-5" y="-5" width="10" height="10" rx="2" />
         <rect x="-22" y="-3" width="14" height="6" opacity="0.7" />
         <rect x="8" y="-3" width="14" height="6" opacity="0.7" />
       </g>
       {/* شفق */}
-      <path d="M20 90 C 60 60, 100 100, 150 70" stroke="var(--good)" strokeWidth="3" fill="none" opacity="0.7" filter="url(#glow)" />
+      <path d="M20 90 C 60 60, 100 100, 150 70" stroke="#5ef0a6" strokeWidth="3" fill="none" opacity="0.7" filter="url(#glow)" />
       {/* شهاب */}
-      <line x1="120" y1="112" x2="78" y2="140" stroke="var(--flame)" strokeWidth="2.5" strokeLinecap="round" filter="url(#glow)" />
-      <circle cx="78" cy="140" r="3" fill="var(--flame)" filter="url(#glow)" />
+      <line x1="120" y1="112" x2="78" y2="140" stroke="#ffd166" strokeWidth="2.5" strokeLinecap="round" filter="url(#glow)" />
+      <circle cx="78" cy="140" r="3" fill="#ffd166" filter="url(#glow)" />
       {/* أوزون */}
-      <rect x="0" y="180" width="200" height="10" rx="5" fill="var(--accent)" opacity="0.35" />
+      <rect x="0" y="180" width="200" height="10" rx="5" fill="#2f7fc1" opacity="0.45" />
       {/* غيمة */}
-      <g fill="var(--ink)" opacity="0.85">
+      <g fill="#ffffff" stroke="#b9cde4" strokeWidth="1">
         <circle cx="70" cy="244" r="11" /><circle cx="86" cy="238" r="14" /><circle cx="103" cy="245" r="10" />
         <rect x="60" y="244" width="52" height="10" rx="5" />
       </g>
       <g stroke="var(--accent)" strokeWidth="2" strokeLinecap="round">
         <line x1="72" y1="260" x2="69" y2="267" /><line x1="86" y1="260" x2="83" y2="267" /><line x1="100" y1="260" x2="97" y2="267" />
       </g>
-      <rect x="0" y="270" width="360" height="30" fill="var(--good)" opacity="0.28" />
+      <rect x="0" y="270" width="360" height="30" fill="#bfe6c9" />
       <path d="M150 300 L190 276 L215 290 L240 272 L290 300 Z" fill="var(--good)" opacity="0.55" />
       <text x="40" y="292" textAnchor="middle" fontSize="11" fill="var(--muted)" style={T}>سطح الأرض</text>
     </svg>
@@ -109,14 +109,14 @@ function Moon() {
     { a: 315 },
   ]
   return (
-    <svg viewBox="0 0 360 250" role="img" aria-label="القمر في مداره حول الأرض: المحاق بين الأرض والشمس، والبدر في الجهة المقابلة، والتربيعان بينهما">
+    <svg viewBox="0 0 360 268" role="img" aria-label="القمر في مداره حول الأرض: المحاق بين الأرض والشمس، والبدر في الجهة المقابلة، والتربيعان بينهما">
       <defs><Glow id="g2" s={6} /></defs>
-      <circle cx="380" cy="125" r="70" fill="var(--flame)" opacity="0.9" filter="url(#g2)" />
+      <circle cx="380" cy="125" r="70" fill="var(--sun)" opacity="0.95" filter="url(#g2)" />
       <text x="335" y="129" textAnchor="middle" fontSize="13" fill="#1b1203" style={T}>الشمس</text>
-      {[60, 100, 150, 190].map((y) => <line key={y} x1="300" y1={y} x2="265" y2={y} stroke="var(--flame)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.7" />)}
+      {[60, 100, 150, 190].map((y) => <line key={y} x1="300" y1={y} x2="265" y2={y} stroke="var(--sun)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.7" />)}
       <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--line)" strokeDasharray="3 5" />
       <circle cx={cx} cy={cy} r="20" fill="var(--accent)" opacity="0.85" filter="url(#g2)" />
-      <path d={`M${cx} ${cy - 20} a20 20 0 0 0 0 40 z`} fill="var(--paper)" opacity="0.55" />
+      <path d={`M${cx} ${cy - 20} a20 20 0 0 0 0 40 z`} fill="#13213b" opacity="0.35" />
       <text x={cx} y={cy + 38} textAnchor="middle" fontSize="12" fill="var(--ink)" style={T}>الأرض</text>
       {phases.map((p) => {
         const rad = (p.a * Math.PI) / 180
@@ -124,15 +124,15 @@ function Moon() {
         const y = cy - R * Math.sin(rad)
         return (
           <g key={p.a}>
-            <circle cx={x} cy={y} r="11" fill="var(--surface-2)" stroke="var(--line)" />
-            <path d={`M${x} ${y - 11} a11 11 0 0 1 0 22 z`} fill="var(--ink)" />
+            <circle cx={x} cy={y} r="11" fill="#fff6d8" stroke="#c9d6e6" />
+            <path d={`M${x} ${y - 11} a11 11 0 0 0 0 22 z`} fill="#3a4a66" />
             {p.label && (
               <text x={x + (p.a === 0 ? 0 : p.a === 180 ? 0 : 0)} y={p.a === 90 ? y - 18 : p.a === 270 ? y + 26 : y + 28} textAnchor="middle" fontSize="12" fill="var(--accent)" style={T}>{p.label}</text>
             )}
           </g>
         )
       })}
-      <text x="180" y="244" textAnchor="middle" fontSize="10.5" fill="var(--muted)" style={{ ...T, fontWeight: 400 }}>نصف القمر المواجه للشمس مضاء دائمًا، وما نراه منه يتغير</text>
+      <text x="180" y="262" textAnchor="middle" fontSize="10.5" fill="var(--muted)" style={{ ...T, fontWeight: 400 }}>نصف القمر المواجه للشمس مضاء دائمًا، وما نراه منه يتغير</text>
     </svg>
   )
 }
@@ -156,8 +156,8 @@ function Stars() {
       </defs>
       {/* سديم */}
       <g opacity="0.85">
-        <ellipse cx="320" cy="118" rx="30" ry="20" fill="rgba(99,230,255,0.25)" />
-        <ellipse cx="312" cy="110" rx="18" ry="13" fill="rgba(255,182,72,0.25)" />
+        <ellipse cx="320" cy="118" rx="30" ry="20" fill="rgba(56,140,220,0.25)" />
+        <ellipse cx="312" cy="110" rx="18" ry="13" fill="rgba(255,150,40,0.3)" />
       </g>
       <text x="320" y="154" textAnchor="middle" fontSize="12" fill="var(--ink)" style={T}>سديم</text>
       {arrow('M286 118 L262 118')}
@@ -166,7 +166,7 @@ function Stars() {
       {arrow('M232 104 L196 62')}
       {node(170, 52, 18, '#ff6b5a', 'عملاق أحمر')}
       {arrow('M146 52 L96 52')}
-      {node(76, 52, 6, '#e8f1ff', 'قزم أبيض')}
+      {node(76, 52, 6, '#cfe0ff', 'قزم أبيض')}
       <text x="190" y="18" textAnchor="middle" fontSize="11" fill="var(--accent)" style={T}>نجم متوسط مثل الشمس</text>
       {/* المسار السفلي: نجم ضخم */}
       {arrow('M232 132 L200 178')}
@@ -177,7 +177,7 @@ function Stars() {
           const r = (a * Math.PI) / 180
           return <line key={a} x1={95 + 6 * Math.cos(r)} y1={190 + 6 * Math.sin(r)} x2={95 + 16 * Math.cos(r)} y2={190 + 16 * Math.sin(r)} stroke="var(--flame)" strokeWidth="2.5" strokeLinecap="round" />
         })}
-        <circle cx="95" cy="190" r="5" fill="#fff4d6" />
+        <circle cx="95" cy="190" r="5" fill="#ffb020" />
       </g>
       <text x="95" y="222" textAnchor="middle" fontSize="12" fill="var(--ink)" style={T}>مستعر أعظم</text>
       {arrow('M78 180 L44 156')}

@@ -140,7 +140,7 @@ export default function Lesson({ data, id, go, store, student }) {
           <div className="stack" style={{ gap: 8 }}>
             <h3>إثراءات</h3>
             {extras.length === 0 ? (
-              <p className="small muted">ستظهر هنا الملفات والفيديوهات التي تضيفها المعلمة لهذا الدرس.</p>
+              null
             ) : extras.map((e) => (
               <a key={e.id} className="link-row" href={e.url} target="_blank" rel="noopener noreferrer" onClick={() => e.kind === 'video' && track(store, student, 'video', e.url)}>
                 <span className="k">{KIND[e.kind] || 'رابط'}</span>

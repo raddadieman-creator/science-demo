@@ -21,7 +21,6 @@ function Login({ store, onIn }) {
         try { await store.signIn(email.trim(), pw); onIn() } catch (x) { setErr(x.message) } finally { setBusy(false) }
       }}>
         <h1>دخول المعلمة</h1>
-        <p className="muted">لوحة متابعة الطالبات وإدارة الدروس والأسئلة.</p>
         {!local && (
           <label className="field" htmlFor="t-email">البريد الإلكتروني
             <input id="t-email" className="input" type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
@@ -32,7 +31,6 @@ function Login({ store, onIn }) {
         </label>
         {err && <div className="notice error" role="alert">{err}</div>}
         <button className="btn btn-primary" disabled={busy}>{busy ? 'جارٍ الدخول…' : 'دخول'}</button>
-        {local && <p className="small muted">نسخة تجريبية: كلمة المرور <b className="num">{SITE.demoTeacherPassword}</b>. بعد ربط قاعدة البيانات يكون الدخول ببريد المعلمة وكلمة مرورها.</p>}
       </form>
     </main>
   )
@@ -89,7 +87,6 @@ export default function TeacherApp({ store, data, reload }) {
       </div>
 
       {err && <div className="notice error" role="alert">{err}</div>}
-      {store.mode === 'local' && <div className="notice">هذه نسخة تجريبية تعمل بلا قاعدة بيانات: النتائج هنا هي ما يُحل في هذا المتصفح فقط. بعد ربط Supabase تصل نتائج كل الطالبات من أجهزتهن.</div>}
       {empty && (
         <div className="notice spread">
           <span>قاعدة البيانات فارغة. ارفعي المحتوى النموذجي (وحدة «ما وراء الأرض»: أربعة دروس، خمسة اختبارات، وإجابات المساعدة) ثم عدّليه كما تشائين.</span>
