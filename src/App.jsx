@@ -10,6 +10,8 @@ import Quiz from './student/Quiz.jsx'
 import Quizzes from './student/Quizzes.jsx'
 import Enrichments from './student/Enrichments.jsx'
 import Challenges from './student/Challenges.jsx'
+import Achievements from './student/Achievements.jsx'
+import Leaders from './student/Leaders.jsx'
 import LivePlay from './student/LivePlay.jsx'
 import Assistant from './student/Assistant.jsx'
 import TeacherApp from './teacher/TeacherApp.jsx'
@@ -23,6 +25,8 @@ const NAV = [
   ['quizzes', 'الاختبارات', 'quiz'],
   ['enrich', 'الإثراءات', 'video'],
   ['challenges', 'التحديات', 'trophy'],
+  ['leaders', 'المتميزات', 'crown'],
+  ['achievements', 'إنجازاتي', 'medal'],
 ]
 const SECTION_OF = { lesson: 'home', quiz: 'quizzes', live: 'challenges', challenge: 'challenges' }
 
@@ -33,6 +37,7 @@ export default function App() {
   const [student, setStudent] = useState(loadStudent)
   const [route, setRoute] = useState(() => (location.hash === '#teacher' ? { view: 'teacher' } : { view: 'home' }))
   const [chatOpen, setChatOpen] = useState(false)
+  const [pendingCode, setPendingCode] = useState(() => { try { return new URLSearchParams(location.search).get('c') || '' } catch { return '' } })
   const [, bump] = useState(0)
 
   const reload = useCallback(async (s = store) => {
@@ -53,6 +58,14 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => { if (store && student) track(store, student, 'login') }, [store, student])
+  // رابط التحدي المرسل من المعلمة: ‎?c=الكود
+  useEffect(() => {
+    if (!pendingCode || !student || !data) return
+    const code = pendingCode
+    setPendingCode('')
+    try { history.replaceState(history.state, '', location.pathname) } catch {}
+    go('challenges', code)
+  }, [pendingCode, student, data]) // eslint-disable-line react-hooks/exhaustive-deps
   // سجل التنقل: زر الرجوع في الموقع وزر الرجوع في المتصفح يعملان معًا
   useEffect(() => {
     try { history.replaceState({ route: { view: route.view } }, '') } catch {}
@@ -94,6 +107,8 @@ export default function App() {
       case 'enrich': return <Enrichments {...p} />
       case 'challenges': return <Challenges {...p} initialCode={route.id} />
       case 'live': return <LivePlay {...p} initialCode={route.id} />
+      case 'achievements': return <Achievements {...p} />
+      case 'leaders': return <Leaders {...p} />
       default: return <Home {...p} openChat={() => setChatOpen(true)} />
     }
   }

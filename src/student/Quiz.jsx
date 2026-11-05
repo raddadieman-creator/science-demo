@@ -1,8 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { LEVELS } from '../config.js'
 import Icon from '../components/Icons.jsx'
 import { Ring } from '../components/Art.jsx'
 import { recordResult } from '../lib/mine.js'
+import { downloadPdf, printNode } from '../lib/pdf.js'
+import { BrandMark } from '../components/Icons.jsx'
+import { SITE } from '../config.js'
 import QuestionView, { TYPE_LABEL } from './QuestionView.jsx'
 
 
@@ -50,6 +53,8 @@ export default function Quiz({ store, data, id, student, go, challenge }) {
   const [finished, setFinished] = useState(false)
   const [saveErr, setSaveErr] = useState('')
   const [board, setBoard] = useState(null)
+  const sheet = useRef(null)
+  const [pdfBusy, setPdfBusy] = useState(false)
 
   if (!quiz || !questions.length) return <main className="wrap"><div className="empty">لا توجد أسئلة في هذا الاختبار بعد.</div></main>
   const q = questions[i]
@@ -86,6 +91,15 @@ export default function Quiz({ store, data, id, student, go, challenge }) {
     return (
       <main className="wrap">
         <div className="quiz">
+          <div className="row" style={{ justifyContent: 'flex-end' }}>
+            <button className="btn btn-sm" onClick={() => printNode(sheet.current)}><Icon name="print" /> طباعة النتيجة</button>
+            <button className="btn btn-sm btn-primary" disabled={pdfBusy} onClick={async () => { setPdfBusy(true); try { await downloadPdf(sheet.current, `نتيجة-${student.name}-${title}.pdf`) } finally { setPdfBusy(false) } }}><Icon name="download" /> {pdfBusy ? 'جارٍ التجهيز…' : 'تحميل PDF'}</button>
+          </div>
+          <div ref={sheet} className="result-sheet stack" style={{ gap: 20 }}>
+          <div className="sheet-head">
+            <BrandMark size={34} />
+            <div><b>{SITE.name}</b><small>{student.name} · فصل {student.class_name} · {new Date().toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-latn')}</small></div>
+          </div>
           <section className="qcard result">
             {pct >= 80 && <Sparkles />}
             <span className="eyebrow">{title}</span>
@@ -117,6 +131,7 @@ export default function Quiz({ store, data, id, student, go, challenge }) {
             <div className="panel stack" style={{ boxShadow: 'none' }}><h3>حسب مستوى التفكير</h3><Bars rows={byLevel} /></div>
           </div>
           {weak.length > 0 && <div className="notice"><b>راجعي: </b>{weak.map((w) => w.k).join('، ')}</div>}
+          </div>
           <div className="row">
             {!challenge && <button className="btn btn-primary" onClick={() => { setI(0); setChoice(null); setAnswers([]); setFinished(false); setSaveErr('') }}>أعيدي الاختبار</button>}
             {lesson && <button className="btn" onClick={() => go('lesson', lesson.id)}>العودة إلى الدرس</button>}

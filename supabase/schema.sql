@@ -85,7 +85,7 @@ create table if not exists progress_events (
   id text primary key,
   student_name text not null check (char_length(student_name) between 2 and 80),
   class_name text not null check (char_length(class_name) <= 20),
-  kind text not null check (kind in ('login', 'lesson', 'video', 'activity')),
+  kind text not null check (kind in ('login', 'lesson', 'video', 'activity', 'experiment', 'mission')),
   ref text default '' check (char_length(ref) <= 300),
   created_at timestamptz default now()
 );
@@ -148,6 +148,8 @@ alter table enrichments enable row level security;
 alter table attempts enable row level security;
 alter table student_questions enable row level security;
 alter table progress_events enable row level security;
+alter table progress_events drop constraint if exists progress_events_kind_check;
+alter table progress_events add constraint progress_events_kind_check check (kind in ('login', 'lesson', 'video', 'activity', 'experiment', 'mission'));
 alter table challenges enable row level security;
 alter table games enable row level security;
 alter table players enable row level security;
@@ -212,6 +214,18 @@ language sql security definer set search_path = public as $$
   limit 50;
 $$;
 grant execute on function challenge_board(text) to anon, authenticated;
+
+-- لوحة المتميزات: أفضل نسبة لكل طالبة في كل اختبار (بلا تفاصيل الإجابات)
+create or replace function class_bests()
+returns table (student_name text, class_name text, quiz_id text, best_pct int)
+language sql security definer set search_path = public as $$
+  select a.student_name, a.class_name, a.quiz_id,
+         max(round(a.score * 100.0 / nullif(a.total, 0)))::int
+  from attempts a
+  where a.challenge_id is null
+  group by a.student_name, a.class_name, a.quiz_id;
+$$;
+grant execute on function class_bests() to anon, authenticated;
 
 -- ===================== البث المباشر للمسابقة
 do $$

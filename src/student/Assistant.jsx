@@ -3,6 +3,7 @@ import { SITE } from '../config.js'
 import Icon from '../components/Icons.jsx'
 import Buddy, { AtomFace } from '../components/Buddy.jsx'
 import { matchFaq, matchTerm, rankFaq } from '../lib/arabic.js'
+import { bumpQuestions } from '../lib/badges.js'
 
 // إجابة من البنك المعدّ (تُستخدم وحدها، أو احتياطًا عند تعذّر الذكاء الاصطناعي)
 function fromBank(question, data) {
@@ -28,6 +29,7 @@ export default function Assistant({ store, data, student, go, open, setOpen }) {
     const question = q.trim()
     if (!question || busy) return
     setText('')
+    bumpQuestions()
     const history = [...msgs, { who: 'me', text: question }]
     setMsgs(history)
 

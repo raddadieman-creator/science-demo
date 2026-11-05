@@ -15,6 +15,17 @@ export class StoreError extends Error {
   }
 }
 
+export function bestsFrom(attempts) {
+  const m = new Map()
+  for (const a of attempts) {
+    const k = a.student_name + '|' + a.class_name + '|' + a.quiz_id
+    const pct = Math.round((a.score / a.total) * 100)
+    const v = m.get(k)
+    if (!v || pct > v.pct) m.set(k, { name: a.student_name, cls: a.class_name, quiz_id: a.quiz_id, pct })
+  }
+  return [...m.values()]
+}
+
 export function boardFrom(attempts) {
   const m = new Map()
   for (const a of attempts) {
@@ -122,6 +133,7 @@ function createLocalStore() {
     async setChallengeActive(id, active) { tx((db) => { const c = (db.challenges || []).find((x) => x.id === id); if (c) c.active = active }) },
     async deleteChallenge(id) { tx((db) => { db.challenges = (db.challenges || []).filter((x) => x.id !== id) }) },
     async challengeBoard(challenge_id) { return boardFrom(read().attempts.filter((a) => a.challenge_id === challenge_id)) },
+    async classBests() { return bestsFrom(read().attempts.filter((a) => !a.challenge_id)) },
     aiEnabled: false,
     async askAI() { throw new StoreError('المساعد الذكي غير مفعّل.') },
 
@@ -256,6 +268,10 @@ async function createSupabaseStore() {
     async challengeBoard(challenge_id) {
       const d = await run(sb.rpc('challenge_board', { p_challenge: challenge_id }))
       return (d || []).map((r) => ({ name: r.student_name, cls: r.class_name, pct: r.best_pct, tries: r.tries }))
+    },
+    async classBests() {
+      const d = await run(sb.rpc('class_bests'))
+      return (d || []).map((r) => ({ name: r.student_name, cls: r.class_name, quiz_id: r.quiz_id, pct: r.best_pct }))
     },
     aiEnabled: AI_ENABLED,
     async askAI(messages) {

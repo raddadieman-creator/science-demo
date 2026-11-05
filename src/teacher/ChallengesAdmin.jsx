@@ -3,6 +3,55 @@ import Icon from '../components/Icons.jsx'
 import { boardFrom } from '../lib/store.js'
 import { fmtDate } from './analytics.js'
 import LiveHost from './LiveHost.jsx'
+import qrcode from 'qrcode-generator'
+import { SITE } from '../config.js'
+
+const linkFor = (code) => `${location.origin}${location.pathname}?c=${code}`
+const messageFor = (ch) => `السلام عليكن طالباتي 🌟\nتحدٍّ جديد على منصة ${SITE.name}: «${ch.title}»\nادخلي من الرابط: ${linkFor(ch.code)}\nأو اكتبي الكود في صفحة التحديات: ${ch.code}`
+
+function QR({ text, size = 180 }) {
+  const qr = qrcode(0, 'M')
+  qr.addData(text)
+  qr.make()
+  return <span className="qr" style={{ width: size, height: size }} dangerouslySetInnerHTML={{ __html: qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true }) }} />
+}
+
+function Share({ ch, onShow }) {
+  const [copied, setCopied] = useState('')
+  const copy = async (what, text) => {
+    try { await navigator.clipboard.writeText(text); setCopied(what); setTimeout(() => setCopied(''), 1600) } catch {}
+  }
+  return (
+    <div className="share">
+      <QR text={linkFor(ch.code)} size={150} />
+      <div className="stack" style={{ gap: 8, minWidth: 0 }}>
+        <span className="small muted">رابط التحدي</span>
+        <code className="share-link">{linkFor(ch.code)}</code>
+        <div className="row">
+          <a className="btn btn-sm btn-wa" href={`https://wa.me/?text=${encodeURIComponent(messageFor(ch))}`} target="_blank" rel="noopener noreferrer"><Icon name="share" /> واتساب</a>
+          <button className="btn btn-sm" onClick={() => copy('msg', messageFor(ch))}><Icon name={copied === 'msg' ? 'check' : 'copy'} /> {copied === 'msg' ? 'نُسخت' : 'نسخ رسالة جاهزة'}</button>
+          <button className="btn btn-sm" onClick={() => copy('link', linkFor(ch.code))}><Icon name={copied === 'link' ? 'check' : 'link'} /> {copied === 'link' ? 'نُسخ' : 'نسخ الرابط'}</button>
+          <button className="btn btn-sm btn-primary" onClick={onShow}><Icon name="expand" /> عرض على شاشة الفصل</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Stage({ ch, onClose }) {
+  return (
+    <div className="stage" role="dialog" aria-label="عرض الكود">
+      <button className="stage-x" onClick={onClose} aria-label="إغلاق"><Icon name="x" /></button>
+      <span className="eyebrow">{SITE.name} ← التحديات</span>
+      <h2>{ch.title}</h2>
+      <div className="stage-body">
+        <div className="big-code">{ch.code}</div>
+        <QR text={linkFor(ch.code)} size={240} />
+      </div>
+      <p className="muted">اكتبي الكود في صفحة «التحديات»، أو امسحي الرمز بكاميرا الجوال</p>
+    </div>
+  )
+}
 
 function CopyCode({ code }) {
   const [ok, setOk] = useState(false)
@@ -21,6 +70,7 @@ export default function ChallengesAdmin({ store, data, attempts, reload }) {
   const [fresh, setFresh] = useState(null)
   const [open, setOpen] = useState(null)
   const [err, setErr] = useState('')
+  const [stage, setStage] = useState(null)
 
   const load = async () => { try { setList(await store.getChallenges()) } catch (e) { setErr(e.message) } }
   useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -72,6 +122,14 @@ export default function ChallengesAdmin({ store, data, attempts, reload }) {
             )}
           </div>
 
+          {fresh && (
+            <div className="panel stack">
+              <h3>أرسلي التحدي للطالبات</h3>
+              <Share ch={fresh} onShow={() => setStage(fresh)} />
+            </div>
+          )}
+          {stage && <Stage ch={stage} onClose={() => setStage(null)} />}
+
           <div className="stack">
             <h3>التحديات</h3>
             {list.length === 0 ? <div className="empty">لا توجد تحديات بعد.</div> : (
@@ -98,7 +156,8 @@ export default function ChallengesAdmin({ store, data, attempts, reload }) {
                           </tr>
                           {open === c.id && (
                             <tr><td colSpan={7} style={{ whiteSpace: 'normal' }}>
-                              {board.length === 0 ? <p className="muted">لم تشارك أي طالبة بعد.</p> : (
+                              <Share ch={c} onShow={() => setStage(c)} />
+                              {board.length === 0 ? <p className="muted" style={{ marginTop: 12 }}>لم تشارك أي طالبة بعد.</p> : (
                                 <ol className="leader" style={{ maxWidth: 560 }}>
                                   {board.map((r, k) => <li key={r.name + r.cls}><span className="pos num">{k + 1}</span><span>{r.name} <span className="muted small">({r.cls})</span></span><b className="num">{r.pct}%</b></li>)}
                                 </ol>
