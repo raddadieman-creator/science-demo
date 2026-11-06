@@ -1,4 +1,4 @@
-import{r as Ve,M as po,j as ae}from"./index-BYgRNG0W.js";/**
+import{r as Ve,M as po,j as ae}from"./index-Dqti_skv.js";/**
  * @license
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT
