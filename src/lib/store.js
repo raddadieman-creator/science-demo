@@ -1,6 +1,7 @@
 // طبقة البيانات: تعمل مع Supabase عند ضبط المتغيرات، وإلا تعمل محليًا في المتصفح (نسخة تجريبية)
 import { USE_SUPABASE, SUPABASE_URL, SUPABASE_ANON_KEY, SITE, AI_ENABLED } from '../config.js'
 import { LESSONS, QUIZZES, QUESTIONS, FAQ } from '../data/seed.js'
+import { BANK } from '../data/bank.js'
 
 export const uid = () =>
   (globalThis.crypto?.randomUUID?.() || 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2))
@@ -54,6 +55,7 @@ function createLocalStore() {
     events: [],
     challenges: [],
     student_questions: [],
+    study_bank: structuredClone(BANK),
     games: [],
     players: [],
     game_answers: [],
@@ -144,9 +146,23 @@ function createLocalStore() {
     async saveFaq(f) { return tx((db) => upsert(db.faq, f)) },
     async deleteFaq(id) { tx((db) => { db.faq = db.faq.filter((x) => x.id !== id) }) },
 
-    async addStudentQuestion(sq) { return tx((db) => upsert(db.student_questions, { id: uid(), status: 'new', created_at: new Date().toISOString(), ...sq })) },
+    async addStudentQuestion(sq) { return tx((db) => upsert(db.student_questions, { id: uid(), status: 'new', source: 'page', is_public: false, created_at: new Date().toISOString(), ...sq })) },
     async getStudentQuestions() { return [...read().student_questions].sort(byNewest) },
     async updateStudentQuestion(id, patch) { tx((db) => { const x = db.student_questions.find((s) => s.id === id); if (x) Object.assign(x, patch) }) },
+    async deleteStudentQuestion(id) { tx((db) => { db.student_questions = db.student_questions.filter((x) => x.id !== id) }) },
+    async getPublicQA() {
+      return read().student_questions.filter((x) => x.is_public && x.answer)
+        .map(({ id, class_name, text, answer, lesson_id, answered_at }) => ({ id, class_name, text, answer, lesson_id, answered_at }))
+        .sort((a, b) => String(b.answered_at).localeCompare(String(a.answered_at)))
+    },
+    async getMyQuestions(ids) {
+      return read().student_questions.filter((x) => ids.includes(x.id))
+        .map(({ id, text, status, answer, is_public, created_at }) => ({ id, text, status, answer, is_public, created_at })).sort(byNewest)
+    },
+
+    async getBank() { return [...(read().study_bank ?? structuredClone(BANK))].sort((a, b) => (a.lesson_id || '').localeCompare(b.lesson_id || '') || byOrd(a, b)) },
+    async saveBankItem(it) { return tx((db) => { db.study_bank = db.study_bank ?? structuredClone(BANK); return upsert(db.study_bank, it) }) },
+    async deleteBankItem(id) { tx((db) => { db.study_bank = (db.study_bank ?? structuredClone(BANK)).filter((x) => x.id !== id) }) },
 
     async createGame(quiz_id) {
       return tx((db) => {
@@ -222,6 +238,7 @@ async function createSupabaseStore() {
       await run(sb.from('quizzes').upsert(QUIZZES))
       await run(sb.from('questions').upsert(QUESTIONS))
       await run(sb.from('faq').upsert(FAQ))
+      await run(sb.from('study_bank').upsert(BANK))
     },
     async resetDemo() {},
 
@@ -296,9 +313,16 @@ async function createSupabaseStore() {
     saveFaq: (f) => up('faq', f),
     deleteFaq: (id) => del('faq', id),
 
-    async addStudentQuestion(sq) { await run(sb.from('student_questions').insert({ id: uid(), status: 'new', ...sq })); return sq },
+    async addStudentQuestion(sq) { const row = { id: uid(), status: 'new', source: 'page', ...sq }; await run(sb.from('student_questions').insert(row)); return row },
     getStudentQuestions: () => all('student_questions', 'created_at'),
     async updateStudentQuestion(id, patch) { await run(sb.from('student_questions').update(patch).eq('id', id)) },
+    deleteStudentQuestion: (id) => del('student_questions', id),
+    async getPublicQA() { return (await run(sb.rpc('public_qa'))) || [] },
+    async getMyQuestions(ids) { return ids.length ? (await run(sb.rpc('my_questions', { p_ids: ids.slice(-50) }))) || [] : [] },
+
+    async getBank() { return (await run(sb.from('study_bank').select('*').order('lesson_id').order('ord'))) || [] },
+    saveBankItem: (it) => up('study_bank', it),
+    deleteBankItem: (id) => del('study_bank', id),
 
     async createGame(quiz_id) {
       for (let i = 0; i < 6; i++) {

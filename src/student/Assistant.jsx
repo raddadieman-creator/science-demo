@@ -4,6 +4,7 @@ import Icon from '../components/Icons.jsx'
 import Buddy, { AtomFace } from '../components/Buddy.jsx'
 import { matchFaq, matchTerm, rankFaq } from '../lib/arabic.js'
 import { bumpQuestions } from '../lib/badges.js'
+import { rememberQuestion } from '../lib/mine.js'
 
 // إجابة من البنك المعدّ (تُستخدم وحدها، أو احتياطًا عند تعذّر الذكاء الاصطناعي)
 function fromBank(question, data) {
@@ -46,8 +47,8 @@ export default function Assistant({ store, data, student, go, open, setOpen }) {
     const b = fromBank(question, data)
     if (b) { setMsgs((m) => [...m, { who: 'bot', ...b }]); return }
     const near = rankFaq(question, data.faq).slice(0, 3).map((r) => r.f.question)
-    setMsgs((m) => [...m, { who: 'bot', text: near.length ? 'لم أجد إجابة مباشرة، لكن قد يفيدك أحد هذه الأسئلة. وأرسلت سؤالك للمعلمة.' : 'سؤال جميل! أرسلته للمعلمة لتجيبك عنه.', near }])
-    try { await store.addStudentQuestion({ student_name: student.name, class_name: student.class_name, text: question }) } catch {}
+    setMsgs((m) => [...m, { who: 'bot', text: near.length ? 'لم أجد إجابة مباشرة، لكن قد يفيدك أحد هذه الأسئلة. وأرسلت سؤالك للمعلمة، وستجدين ردّها في «سؤال وجواب».' : 'سؤال جميل! أرسلته للمعلمة، وستجدين ردّها في «سؤال وجواب».', near }])
+    try { const r = await store.addStudentQuestion({ student_name: student.name, class_name: student.class_name, text: question, source: 'assistant' }); rememberQuestion(r?.id) } catch {}
   }
 
   const samples = ['f2', 'f28', 'f31', 'f37'].map((id) => data.faq.find((f) => f.id === id)?.question).filter(Boolean)

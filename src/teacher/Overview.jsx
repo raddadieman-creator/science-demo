@@ -51,7 +51,7 @@ export default function Overview({ data, attempts, sq, goTab }) {
         <div className="kpi"><b>{students}</b><span>طالبة حلّت اختبارًا</span></div>
         <div className="kpi"><b>{list.length}</b><span>محاولة اختبار</span></div>
         <div className="kpi"><b>{list.length ? `${avg}%` : '—'}</b><span>متوسط الدرجات</span></div>
-        <button className="kpi" style={{ textAlign: 'start', cursor: 'pointer', font: 'inherit', color: 'inherit' }} onClick={() => goTab('assistant')}>
+        <button className="kpi" style={{ textAlign: 'start', cursor: 'pointer', font: 'inherit', color: 'inherit' }} onClick={() => goTab('qa')}>
           <b style={{ color: newQ ? 'var(--flame)' : undefined }}>{newQ}</b><span>سؤال جديد من الطالبات</span>
         </button>
       </div>

@@ -108,6 +108,23 @@ create table if not exists student_questions (
   status text not null default 'new',
   created_at timestamptz default now()
 );
+-- إجابة المعلمة ونشرها لكل الطالبات (بدون اسم الطالبة)
+alter table student_questions add column if not exists answer text check (char_length(answer) <= 3000);
+alter table student_questions add column if not exists answered_at timestamptz;
+alter table student_questions add column if not exists is_public boolean not null default false;
+alter table student_questions add column if not exists lesson_id text;
+alter table student_questions add column if not exists source text not null default 'page';
+
+-- بنك المذاكرة
+create table if not exists study_bank (
+  id text primary key,
+  lesson_id text,
+  ord int default 0,
+  question text not null check (char_length(question) between 2 and 600),
+  answer text not null check (char_length(answer) between 1 and 3000),
+  created_at timestamptz default now()
+);
+alter table study_bank enable row level security;
 
 create table if not exists games (
   id text primary key,
@@ -159,7 +176,7 @@ alter table game_answers enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges'] loop
+  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges','study_bank'] loop
     execute format('drop policy if exists "read_%1$s" on %1$s', t);
     execute format('create policy "read_%1$s" on %1$s for select using (true)', t);
     execute format('drop policy if exists "teacher_%1$s" on %1$s', t);
@@ -179,7 +196,7 @@ drop policy if exists "teacher_progress" on progress_events;
 create policy "teacher_progress" on progress_events for all to authenticated using (true) with check (true);
 
 drop policy if exists "insert_sq" on student_questions;
-create policy "insert_sq" on student_questions for insert to anon with check (status = 'new');
+create policy "insert_sq" on student_questions for insert to anon with check (status = 'new' and answer is null and is_public = false and source in ('page', 'assistant'));
 drop policy if exists "teacher_sq" on student_questions;
 create policy "teacher_sq" on student_questions for all to authenticated using (true) with check (true);
 
@@ -226,6 +243,29 @@ language sql security definer set search_path = public as $$
   group by a.student_name, a.class_name, a.quiz_id;
 $$;
 grant execute on function class_bests() to anon, authenticated;
+
+-- الأسئلة المنشورة للجميع: السؤال والفصل والإجابة فقط، دون اسم الطالبة
+create or replace function public_qa()
+returns table (id text, class_name text, text text, answer text, lesson_id text, answered_at timestamptz)
+language sql security definer set search_path = public as $$
+  select q.id, q.class_name, q.text, q.answer, q.lesson_id, q.answered_at
+  from student_questions q
+  where q.is_public and q.answer is not null
+  order by q.answered_at desc nulls last
+  limit 300;
+$$;
+grant execute on function public_qa() to anon, authenticated;
+
+-- أسئلة الطالبة نفسها (تُعرف بمعرّفاتها المحفوظة في جهازها)
+create or replace function my_questions(p_ids text[])
+returns table (id text, text text, status text, answer text, is_public boolean, created_at timestamptz)
+language sql security definer set search_path = public as $$
+  select q.id, q.text, q.status, q.answer, q.is_public, q.created_at
+  from student_questions q
+  where q.id = any(p_ids[1:50])
+  order by q.created_at desc;
+$$;
+grant execute on function my_questions(text[]) to anon, authenticated;
 
 -- ===================== البث المباشر للمسابقة
 do $$

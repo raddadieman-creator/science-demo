@@ -10,7 +10,6 @@ export default function AssistantAdmin({ store, data, sq, reload }) {
   const [fromSq, setFromSq] = useState(null)
   const [confirm, setConfirm] = useState(null)
   const [err, setErr] = useState('')
-  const pending = sq.filter((s) => s.status === 'new')
 
   const save = async (e) => {
     e.preventDefault(); setErr('')
@@ -23,27 +22,9 @@ export default function AssistantAdmin({ store, data, sq, reload }) {
   }
 
   return (
-    <div className="two">
-      <div className="stack">
-        <div className="spread"><h3>أسئلة الطالبات التي لم تجد إجابة</h3><span className="chip flame num">{pending.length}</span></div>
-        <div className="list">
-          {pending.length === 0 && <p className="small muted">لا توجد أسئلة جديدة.</p>}
-          {pending.map((s) => (
-            <div key={s.id} className="item">
-              <p style={{ fontWeight: 700 }}>{s.text}</p>
-              <span className="small muted">{s.student_name} · {s.class_name} · {fmtDate(s.created_at)}</span>
-              <div className="row">
-                <button className="btn btn-sm btn-primary" onClick={() => { setForm({ ...blank(), question: s.text }); setFromSq(s.id) }}>إضافة إجابة</button>
-                <button className="btn btn-sm btn-ghost" onClick={async () => { await store.updateStudentQuestion(s.id, { status: 'dismissed' }); reload() }}>تجاهل</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="stack">
+    <div className="stack">
         <div className="spread">
-          <h3>بنك الإجابات المعدّة</h3>
+          <h3>إجابات ذرّة المعدّة</h3>
           <button className="btn btn-sm" onClick={() => { setForm(blank()); setFromSq(null) }}>إجابة جديدة</button>
         </div>
         {form && (
@@ -80,7 +61,6 @@ export default function AssistantAdmin({ store, data, sq, reload }) {
             </div>
           ))}
         </div>
-      </div>
     </div>
   )
 }

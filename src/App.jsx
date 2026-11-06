@@ -12,6 +12,7 @@ import Enrichments from './student/Enrichments.jsx'
 import Challenges from './student/Challenges.jsx'
 import Achievements from './student/Achievements.jsx'
 import Leaders from './student/Leaders.jsx'
+import QA from './student/QA.jsx'
 import LivePlay from './student/LivePlay.jsx'
 import Assistant from './student/Assistant.jsx'
 import TeacherApp from './teacher/TeacherApp.jsx'
@@ -23,6 +24,7 @@ const saveStudent = (s) => { try { s ? localStorage.setItem(SKEY, JSON.stringify
 const NAV = [
   ['home', 'الرئيسية', 'home'],
   ['quizzes', 'الاختبارات', 'quiz'],
+  ['qa', 'سؤال وجواب', 'chat'],
   ['enrich', 'الإثراءات', 'video'],
   ['challenges', 'التحديات', 'trophy'],
   ['leaders', 'المتميزات', 'crown'],
@@ -43,10 +45,10 @@ export default function App() {
   const reload = useCallback(async (s = store) => {
     if (!s) return
     try {
-      const [lessons, quizzes, questions, faq, enrichments] = await Promise.all([
-        s.getLessons(), s.getQuizzes(), s.getQuestions(), s.getFaq(), s.getEnrichments(),
+      const [lessons, quizzes, questions, faq, enrichments, bank] = await Promise.all([
+        s.getLessons(), s.getQuizzes(), s.getQuestions(), s.getFaq(), s.getEnrichments(), s.getBank(),
       ])
-      setData({ lessons, quizzes, questions, faq, enrichments })
+      setData({ lessons, quizzes, questions, faq, enrichments, bank })
       setError('')
     } catch (e) {
       setError(e.message || 'تعذّر تحميل المحتوى.')
@@ -109,6 +111,7 @@ export default function App() {
       case 'live': return <LivePlay {...p} initialCode={route.id} />
       case 'achievements': return <Achievements {...p} />
       case 'leaders': return <Leaders {...p} />
+      case 'qa': return <QA key={route.id || 'qa'} {...p} initialTab={route.id} />
       default: return <Home {...p} openChat={() => setChatOpen(true)} />
     }
   }

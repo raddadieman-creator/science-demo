@@ -49,3 +49,26 @@ export function lessonProgress(lesson, quizzes) {
   const done = parts.filter(Boolean).length
   return { pct: Math.round((done / parts.length) * 100), best: qz ? bestFor(qz.id) : null, quiz: qz, videos: vids.length }
 }
+
+// أسئلة الطالبة للمعلمة (معرّفاتها فقط) لتتابع ردّ المعلمة عليها
+export const myQuestionIds = () => read().myq || []
+export function rememberQuestion(id) {
+  if (!id) return
+  const m = read()
+  m.myq = [...(m.myq || []).filter((x) => x !== id), id].slice(-50)
+  write(m)
+}
+// بنك المذاكرة: ما عرفته الطالبة وما تحتاج مراجعته
+export const bankMarks = () => read().bank || {}
+export function markBank(id, v) {
+  const m = read()
+  m.bank = m.bank || {}
+  if (v) m.bank[id] = v; else delete m.bank[id]
+  write(m)
+}
+export function resetBank(ids) {
+  const m = read()
+  m.bank = m.bank || {}
+  ids.forEach((id) => delete m.bank[id])
+  write(m)
+}

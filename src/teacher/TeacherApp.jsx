@@ -8,6 +8,7 @@ import AssistantAdmin from './AssistantAdmin.jsx'
 import ChallengesAdmin from './ChallengesAdmin.jsx'
 import Icon from '../components/Icons.jsx'
 import Tracking from './Tracking.jsx'
+import QAAdmin from './QAAdmin.jsx'
 
 function Login({ store, onIn }) {
   const [email, setEmail] = useState('')
@@ -41,10 +42,11 @@ const TABS = [
   ['overview', 'نظرة عامة'],
   ['tracking', 'متابعة الطالبات'],
   ['results', 'النتائج'],
+  ['qa', 'سؤال وجواب'],
   ['challenges', 'التحديات'],
   ['questions', 'الأسئلة'],
   ['lessons', 'الدروس والإثراءات'],
-  ['assistant', 'المساعدة'],
+  ['assistant', 'إجابات ذرّة'],
 ]
 
 export default function TeacherApp({ store, data, reload }) {
@@ -101,7 +103,7 @@ export default function TeacherApp({ store, data, reload }) {
       <nav className="t-tabs" aria-label="أقسام اللوحة">
         {TABS.map(([k, label]) => (
           <button key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => setTab(k)}>
-            {label}{k === 'assistant' && newQ > 0 && <span className="count num">{newQ}</span>}
+            {label}{k === 'qa' && newQ > 0 && <span className="count num">{newQ}</span>}
           </button>
         ))}
       </nav>
@@ -114,6 +116,7 @@ export default function TeacherApp({ store, data, reload }) {
           {tab === 'challenges' && <ChallengesAdmin store={store} data={data} attempts={attempts} reload={loadT} />}
           {tab === 'questions' && <QuestionsAdmin store={store} data={data} reload={reload} />}
           {tab === 'lessons' && <LessonsAdmin store={store} data={data} reload={reload} />}
+          {tab === 'qa' && <QAAdmin store={store} data={data} sq={sq} reload={refreshAll} />}
           {tab === 'assistant' && <AssistantAdmin store={store} data={data} sq={sq} reload={refreshAll} />}
         </>
       )}
