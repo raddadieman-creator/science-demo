@@ -81,7 +81,7 @@ function createLocalStore() {
   const upsert = (arr, item) => {
     const i = arr.findIndex((x) => x.id === item.id)
     if (i >= 0) arr[i] = { ...arr[i], ...item }
-    else arr.push(item)
+    else arr.push((item = { created_at: new Date().toISOString(), ...item }))
     return item
   }
 
@@ -115,6 +115,9 @@ function createLocalStore() {
       try { return await putLocalFile(file) } catch { throw new StoreError('تعذّر حفظ الملف على هذا الجهاز.') }
     },
     async getStudyFiles() { return [...(read().study_files || [])].sort(byNewest) },
+    async getAnnouncements() { return [...(read().announcements || [])].sort(byNewest) },
+    async addAnnouncement(a) { return tx((db) => { db.announcements = db.announcements || []; return upsert(db.announcements, { id: uid(), ...a }) }) },
+    async deleteAnnouncement(id) { tx((db) => { db.announcements = (db.announcements || []).filter((x) => x.id !== id) }) },
     async addStudyFile(f) { return tx((db) => { db.study_files = db.study_files || []; return upsert(db.study_files, { id: uid(), created_at: new Date().toISOString(), ...f }) }) },
     async deleteStudyFile(id) {
       const f = (read().study_files || []).find((x) => x.id === id)
@@ -168,7 +171,7 @@ function createLocalStore() {
     },
     async getMyQuestions(ids) {
       return read().student_questions.filter((x) => ids.includes(x.id))
-        .map(({ id, text, status, answer, is_public, created_at }) => ({ id, text, status, answer, is_public, created_at })).sort(byNewest)
+        .map(({ id, text, status, answer, is_public, created_at, answered_at }) => ({ id, text, status, answer, is_public, created_at, answered_at })).sort(byNewest)
     },
 
     async getBank() { return [...(read().study_bank ?? structuredClone(BANK))].sort((a, b) => (a.lesson_id || '').localeCompare(b.lesson_id || '') || byOrd(a, b)) },
@@ -267,6 +270,9 @@ async function createSupabaseStore() {
       return sb.storage.from('enrichments').getPublicUrl(path).data.publicUrl
     },
     getStudyFiles: () => all('study_files', 'created_at'),
+    getAnnouncements: () => all('announcements', 'created_at'),
+    addAnnouncement: (a) => up('announcements', { id: uid(), ...a }),
+    deleteAnnouncement: (id) => del('announcements', id),
     addStudyFile: (f) => up('study_files', { id: uid(), ...f }),
     async deleteStudyFile(id) {
       const d = await run(sb.from('study_files').select('url').eq('id', id))

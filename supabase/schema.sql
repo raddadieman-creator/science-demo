@@ -141,6 +141,14 @@ create table if not exists study_files (
 );
 alter table study_files enable row level security;
 
+-- تنبيهات المعلمة للطالبات
+create table if not exists announcements (
+  id text primary key,
+  text text not null check (char_length(text) between 2 and 600),
+  created_at timestamptz default now()
+);
+alter table announcements enable row level security;
+
 create table if not exists games (
   id text primary key,
   code text not null,
@@ -191,7 +199,7 @@ alter table game_answers enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges','study_bank','study_files'] loop
+  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges','study_bank','study_files','announcements'] loop
     execute format('drop policy if exists "read_%1$s" on %1$s', t);
     execute format('create policy "read_%1$s" on %1$s for select using (true)', t);
     execute format('drop policy if exists "teacher_%1$s" on %1$s', t);
@@ -272,10 +280,11 @@ $$;
 grant execute on function public_qa() to anon, authenticated;
 
 -- أسئلة الطالبة نفسها (تُعرف بمعرّفاتها المحفوظة في جهازها)
+drop function if exists my_questions(text[]);
 create or replace function my_questions(p_ids text[])
-returns table (id text, text text, status text, answer text, is_public boolean, created_at timestamptz)
+returns table (id text, text text, status text, answer text, is_public boolean, created_at timestamptz, answered_at timestamptz)
 language sql security definer set search_path = public as $$
-  select q.id, q.text, q.status, q.answer, q.is_public, q.created_at
+  select q.id, q.text, q.status, q.answer, q.is_public, q.created_at, q.answered_at
   from student_questions q
   where q.id = any(p_ids[1:50])
   order by q.created_at desc;

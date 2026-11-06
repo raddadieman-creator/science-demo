@@ -9,6 +9,7 @@ import ChallengesAdmin from './ChallengesAdmin.jsx'
 import Icon from '../components/Icons.jsx'
 import Tracking from './Tracking.jsx'
 import QAAdmin from './QAAdmin.jsx'
+import Announce from './Announce.jsx'
 
 function Login({ store, onIn }) {
   const [email, setEmail] = useState('')
@@ -110,6 +111,7 @@ export default function TeacherApp({ store, data, reload }) {
 
       {!data ? <p className="muted">جارٍ التحميل…</p> : (
         <>
+          {tab === 'overview' && <Announce store={store} data={data} reload={reload} />}
           {tab === 'overview' && <Overview data={data} attempts={attempts} sq={sq} goTab={setTab} />}
           {tab === 'tracking' && <Tracking data={data} events={events} attempts={attempts} />}
           {tab === 'results' && <Results store={store} data={data} attempts={attempts} reload={loadT} />}

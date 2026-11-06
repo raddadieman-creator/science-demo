@@ -46,7 +46,8 @@ function Sparkles() {
 
 export default function Quiz({ store, data, id, student, go, challenge }) {
   const quiz = data.quizzes.find((q) => q.id === id)
-  const questions = useMemo(() => data.questions.filter((q) => q.quiz_id === id).sort((a, b) => a.ord - b.ord), [data, id])
+  // تُثبَّت الأسئلة عند بدء الاختبار حتى لا يغيّرها التحديث الدوري للمحتوى
+  const [questions] = useState(() => data.questions.filter((q) => q.quiz_id === id).sort((a, b) => a.ord - b.ord))
   const [i, setI] = useState(0)
   const [choice, setChoice] = useState(null)
   const [answers, setAnswers] = useState([])

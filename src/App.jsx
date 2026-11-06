@@ -16,6 +16,7 @@ import QA from './student/QA.jsx'
 import LivePlay from './student/LivePlay.jsx'
 import Assistant from './student/Assistant.jsx'
 import TeacherApp from './teacher/TeacherApp.jsx'
+import Bell from './components/Bell.jsx'
 
 const SKEY = 'mukhtabari:student'
 const loadStudent = () => { try { return JSON.parse(localStorage.getItem(SKEY)) || null } catch { return null } }
@@ -45,10 +46,10 @@ export default function App() {
   const reload = useCallback(async (s = store) => {
     if (!s) return
     try {
-      const [lessons, quizzes, questions, faq, enrichments, bank, files] = await Promise.all([
-        s.getLessons(), s.getQuizzes(), s.getQuestions(), s.getFaq(), s.getEnrichments(), s.getBank(), s.getStudyFiles(),
+      const [lessons, quizzes, questions, faq, enrichments, bank, files, announcements] = await Promise.all([
+        s.getLessons(), s.getQuizzes(), s.getQuestions(), s.getFaq(), s.getEnrichments(), s.getBank(), s.getStudyFiles(), s.getAnnouncements(),
       ])
-      setData({ lessons, quizzes, questions, faq, enrichments, bank, files })
+      setData({ lessons, quizzes, questions, faq, enrichments, bank, files, announcements })
       setError('')
     } catch (e) {
       setError(e.message || 'تعذّر تحميل المحتوى.')
@@ -60,6 +61,14 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   useEffect(() => { if (store && student) track(store, student, 'login') }, [store, student])
+  // تحديث المحتوى كل دقيقة لتصل إضافات المعلمة وتنبيهاتها دون إعادة فتح المنصة
+  useEffect(() => {
+    if (!store || !student || route.view === 'teacher') return
+    const t = setInterval(() => { if (!document.hidden) reload() }, 60_000)
+    const vis = () => { if (!document.hidden) reload() }
+    document.addEventListener('visibilitychange', vis)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', vis) }
+  }, [store, student, route.view === 'teacher', reload]) // eslint-disable-line react-hooks/exhaustive-deps
   // رابط التحدي المرسل من المعلمة: ‎?c=الكود
   useEffect(() => {
     if (!pendingCode || !student || !data) return
@@ -139,7 +148,8 @@ export default function App() {
               <div className="me-chip">
                 <span className="av">{first?.[0]}</span>
                 <span>{first} · {student.class_name}</span>
-                <button className="out" onClick={() => { saveStudent(null); setStudent(null); go('home') }} title="خروج"><Icon name="logout" /> خروج</button>
+                {data && store && <Bell store={store} data={data} go={go} />}
+                <button className="out" onClick={() => { saveStudent(null); setStudent(null); go('home') }} title="خروج" aria-label="خروج"><Icon name="logout" /><span className="out-t">خروج</span></button>
               </div>
             </>
           )}
