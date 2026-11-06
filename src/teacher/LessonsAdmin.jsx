@@ -1,3 +1,4 @@
+import { FileA } from '../components/Media.jsx'
 import { useEffect, useState } from 'react'
 import { uid } from '../lib/store.js'
 
@@ -36,7 +37,7 @@ function Enrichments({ store, lesson, data, reload }) {
         {items.map((e) => (
           <div key={e.id} className="item">
             <div className="spread">
-              <span className="row"><span className="chip flame">{KIND[e.kind]}</span><a href={e.url} target="_blank" rel="noopener noreferrer" style={{ overflowWrap: 'anywhere' }}>{e.title}</a></span>
+              <span className="row"><span className="chip flame">{KIND[e.kind]}</span><FileA url={e.url} style={{ overflowWrap: 'anywhere' }}>{e.title}</FileA></span>
               {confirm === e.id ? (
                 <span className="row">
                   <button className="btn btn-sm btn-danger" onClick={async () => { await store.deleteEnrichment(e.id); setConfirm(null); reload() }}>تأكيد الحذف</button>

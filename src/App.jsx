@@ -45,10 +45,10 @@ export default function App() {
   const reload = useCallback(async (s = store) => {
     if (!s) return
     try {
-      const [lessons, quizzes, questions, faq, enrichments, bank] = await Promise.all([
-        s.getLessons(), s.getQuizzes(), s.getQuestions(), s.getFaq(), s.getEnrichments(), s.getBank(),
+      const [lessons, quizzes, questions, faq, enrichments, bank, files] = await Promise.all([
+        s.getLessons(), s.getQuizzes(), s.getQuestions(), s.getFaq(), s.getEnrichments(), s.getBank(), s.getStudyFiles(),
       ])
-      setData({ lessons, quizzes, questions, faq, enrichments, bank })
+      setData({ lessons, quizzes, questions, faq, enrichments, bank, files })
       setError('')
     } catch (e) {
       setError(e.message || 'تعذّر تحميل المحتوى.')

@@ -1,5 +1,6 @@
 // عرض سؤال بأي نوع (اختيار، صواب وخطأ، إكمال، ترتيب، مزاوجة) مع التبرير بعد الإجابة
 import { useMemo, useState } from 'react'
+import { Img } from '../components/Media.jsx'
 import Icon from '../components/Icons.jsx'
 import { cheer } from '../components/Buddy.jsx'
 
@@ -55,6 +56,7 @@ function OptionQuestion({ q, onDone }) {
   return (
     <>
       <p className="qtext">{text}</p>
+      <Img src={q.image} />
       {q.type === 'tf' ? (
         <div className="tf-row">
           {q.options.map((o, c) => (
@@ -89,6 +91,7 @@ function OrderQuestion({ q, onDone }) {
   return (
     <>
       <p className="qtext">{q.text}</p>
+      <Img src={q.image} />
       <div className={`order-zone ${seq.length === q.items.length ? 'full' : ''}`}>
         {seq.length === 0 && <span className="muted small" style={{ padding: 8 }}>اضغطي العبارات بالترتيب الصحيح</span>}
         {seq.map((i, k) => (
@@ -141,6 +144,7 @@ function MatchQuestion({ q, onDone }) {
   return (
     <>
       <p className="qtext">{q.text}</p>
+      <Img src={q.image} />
       <div className="match-grid">
         {q.pairs.map((p, li) => {
           const ri = map[li]

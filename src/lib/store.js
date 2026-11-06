@@ -2,6 +2,7 @@
 import { USE_SUPABASE, SUPABASE_URL, SUPABASE_ANON_KEY, SITE, AI_ENABLED } from '../config.js'
 import { LESSONS, QUIZZES, QUESTIONS, FAQ } from '../data/seed.js'
 import { BANK } from '../data/bank.js'
+import { putLocalFile, deleteLocalFile, MAX_FILE_MB } from './files.js'
 
 export const uid = () =>
   (globalThis.crypto?.randomUUID?.() || 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2))
@@ -109,7 +110,17 @@ function createLocalStore() {
     async getEnrichments() { return [...read().enrichments].sort(byNewest) },
     async addEnrichment(e) { return tx((db) => upsert(db.enrichments, { id: uid(), created_at: new Date().toISOString(), ...e })) },
     async deleteEnrichment(id) { tx((db) => { db.enrichments = db.enrichments.filter((x) => x.id !== id) }) },
-    async uploadFile() { throw new StoreError('رفع الملفات يعمل بعد ربط المنصة بقاعدة البيانات. أضيفي رابطًا بدلًا منه.') },
+    async uploadFile(file) {
+      if (file.size > MAX_FILE_MB * 1024 * 1024) throw new StoreError(`حجم الملف أكبر من ${MAX_FILE_MB} ميجابايت.`)
+      try { return await putLocalFile(file) } catch { throw new StoreError('تعذّر حفظ الملف على هذا الجهاز.') }
+    },
+    async getStudyFiles() { return [...(read().study_files || [])].sort(byNewest) },
+    async addStudyFile(f) { return tx((db) => { db.study_files = db.study_files || []; return upsert(db.study_files, { id: uid(), created_at: new Date().toISOString(), ...f }) }) },
+    async deleteStudyFile(id) {
+      const f = (read().study_files || []).find((x) => x.id === id)
+      tx((db) => { db.study_files = (db.study_files || []).filter((x) => x.id !== id) })
+      await deleteLocalFile(f?.url)
+    },
 
     async getQuizzes() { return [...read().quizzes].sort(byOrd) },
     async saveQuiz(qz) { return tx((db) => upsert(db.quizzes, qz)) },
@@ -254,6 +265,14 @@ async function createSupabaseStore() {
       const { error } = await sb.storage.from('enrichments').upload(path, file, { contentType: file.type || undefined })
       if (error) throw new StoreError('تعذّر رفع الملف: ' + error.message)
       return sb.storage.from('enrichments').getPublicUrl(path).data.publicUrl
+    },
+    getStudyFiles: () => all('study_files', 'created_at'),
+    addStudyFile: (f) => up('study_files', { id: uid(), ...f }),
+    async deleteStudyFile(id) {
+      const d = await run(sb.from('study_files').select('url').eq('id', id))
+      await del('study_files', id)
+      const m = String(d?.[0]?.url || '').split('/object/public/enrichments/')[1]
+      if (m) await sb.storage.from('enrichments').remove([decodeURIComponent(m)])
     },
 
     getQuizzes: () => all('quizzes'),

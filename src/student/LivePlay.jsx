@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Img } from '../components/Media.jsx'
 import { SITE } from '../config.js'
 import Icon from '../components/Icons.jsx'
 
@@ -124,6 +125,7 @@ export default function LivePlay({ store, student, data, initialCode }) {
             </div>
             <section className="qcard">
             <p className="qtext">{q.text}</p>
+            <Img src={q.image} />
             {myAnswer ? (
               <div className="feedback good" style={{ background: 'var(--primary-soft)' }}>
                 <span className="ic" style={{ background: 'var(--primary)' }}><Icon name="check" /></span>
@@ -145,6 +147,7 @@ export default function LivePlay({ store, student, data, initialCode }) {
         {game.status === 'reveal' && q && (
           <section className="qcard">
             <p className="qtext">{q.text}</p>
+            <Img src={q.image} />
             <div className="options">
               {q.options.map((o, c) => (
                 <div key={c} className={`option ${c === q.correct ? 'correct' : c === myAnswer?.choice ? 'wrong' : 'dim'}`}>

@@ -73,8 +73,12 @@ export default function Buddy({ onOpen, hidden }) {
       const [x, y] = spots[Math.floor(Math.random() * spots.length)]
       setWalking(true)
       setPos({ x: Math.max(8, Math.min(w - 100, x)), y: Math.max(90, Math.min(h - 106, y)) })
-      setTimeout(() => setWalking(false), 2600)
-      if (Math.random() < 0.35) { setBubble(IDLE[Math.floor(Math.random() * IDLE.length)]); setTimeout(() => setBubble(''), 3200) }
+      setBubble('')
+      setTimeout(() => {
+        setWalking(false)
+        // الفقاعة بعد الوصول فقط، حتى لا تخرج عن الشاشة أثناء الحركة
+        if (Math.random() < 0.35) { setBubble(IDLE[Math.floor(Math.random() * IDLE.length)]); setTimeout(() => setBubble(''), 3200) }
+      }, 2700)
       t = setTimeout(wander, 7000 + Math.random() * 6000)
     }
     t = setTimeout(wander, 4000)

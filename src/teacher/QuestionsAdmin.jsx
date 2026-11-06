@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { LEVELS } from '../config.js'
 import { uid } from '../lib/store.js'
+import { ImagePicker, Img } from '../components/Media.jsx'
+import Icon from '../components/Icons.jsx'
+import ImportBox from './ImportBox.jsx'
+import { downloadQuestionsTemplate, parseQuestionsFile } from './excel.js'
 
+const nQ = (n) => (n === 1 ? 'سؤال واحد' : n === 2 ? 'سؤالان' : n <= 10 ? `${n} أسئلة` : `${n} سؤالًا`)
 const LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و']
 
 const TYPES = [['mcq', 'اختيار من متعدد'], ['tf', 'صواب أم خطأ'], ['fill', 'أكملي الفراغ'], ['order', 'ترتيب'], ['match', 'مزاوجة']]
@@ -15,7 +20,7 @@ function normalizeType(q, type) {
   return { ...base, options, rationales: q.rationales?.length === options.length ? q.rationales : options.map(() => '') }
 }
 
-function QuestionForm({ initial, concepts, onSave, onCancel }) {
+function QuestionForm({ store, initial, concepts, onSave, onCancel }) {
   const [q, setQ] = useState(() => normalizeType(initial, initial.type || 'mcq'))
   const [err, setErr] = useState('')
   const set = (k, v) => setQ((x) => ({ ...x, [k]: v }))
@@ -48,6 +53,7 @@ function QuestionForm({ initial, concepts, onSave, onCancel }) {
       <label className="field" htmlFor="qf-text">{q.type === 'tf' ? 'العبارة' : q.type === 'fill' ? 'الجملة (ضعي ____ مكان الفراغ)' : 'نص السؤال'}
         <textarea id="qf-text" className="input" value={q.text} onChange={(e) => set('text', e.target.value)} />
       </label>
+      <ImagePicker store={store} id="qf-img" value={q.image || ''} onChange={(u) => set('image', u)} />
 
       {q.type === 'tf' && (
         <div className="row">
@@ -135,6 +141,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
   const [confirm, setConfirm] = useState(null)
   const [newQuiz, setNewQuiz] = useState(null)
   const [msg, setMsg] = useState('')
+  const [importing, setImporting] = useState(false)
 
   const quiz = data.quizzes.find((q) => q.id === quizId)
   const qs = data.questions.filter((q) => q.quiz_id === quizId).sort((a, b) => a.ord - b.ord)
@@ -155,6 +162,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
         </label>
         <div className="row">
           <button className="btn btn-primary" disabled={!quiz} onClick={() => setEditing({ _new: true, id: uid(), quiz_id: quizId, ord: (qs.at(-1)?.ord || 0) + 1, type: 'mcq', text: '', options: ['', '', '', ''], rationales: ['', '', '', ''], correct: 0, explanation: '', concept: '', level: LEVELS[0] })}>إضافة سؤال</button>
+          <button className="btn" disabled={!quiz} onClick={() => { setImporting(true); setEditing(null) }}><Icon name="download" /> رفع من Excel</button>
           <button className="btn" onClick={() => setNewQuiz({ id: uid(), title: '', description: '', lesson_id: '', ord: data.quizzes.length + 1 })}>اختبار جديد</button>
         </div>
       </div>
@@ -181,7 +189,19 @@ export default function QuestionsAdmin({ store, data, reload }) {
         </form>
       )}
 
-      {editing && <QuestionForm key={editing.id} initial={editing} concepts={concepts} onSave={saveQ} onCancel={() => setEditing(null)} />}
+      {importing && quiz && (
+        <ImportBox
+          title="رفع أسئلة من Excel"
+          target={`«${quiz.title}»`}
+          onTemplate={downloadQuestionsTemplate}
+          onParse={(f) => parseQuestionsFile(f, quiz.id, (qs.at(-1)?.ord || 0) + 1)}
+          preview={(x) => (<><div className="row"><span className="chip sun">{TYPES.find((t) => t[0] === x.type)?.[1]}</span><span className="chip primary">{x.level}</span><span className="chip">{x.concept}</span></div><b>{x.text}</b></>)}
+          onCommit={async (rows) => { for (const r of rows) await store.saveQuestion(r); await reload(); setImporting(false); setMsg(`أُضيف إلى «${quiz.title}»: ${nQ(rows.length)}.`) }}
+          onClose={() => setImporting(false)}
+        />
+      )}
+
+      {editing && <QuestionForm store={store} key={editing.id} initial={editing} concepts={concepts} onSave={saveQ} onCancel={() => setEditing(null)} />}
 
       <div className="list">
         {qs.length === 0 && <p className="muted">لا توجد أسئلة في هذا الاختبار بعد.</p>}
@@ -200,6 +220,7 @@ export default function QuestionsAdmin({ store, data, reload }) {
               </div>
             </div>
             <p style={{ fontWeight: 700 }}>{q.text}</p>
+            {q.image && <Img src={q.image} className="q-thumb" />}
             <p className="small muted">{q.type === 'order' ? q.items?.join(' ← ') : q.type === 'match' ? q.pairs?.map((p) => p[0] + ' ↔ ' + p[1]).join(' · ') : `الإجابة: ${q.options?.[q.correct]}`}</p>
           </div>
         ))}

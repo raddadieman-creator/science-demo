@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileA } from '../components/Media.jsx'
 import Icon from '../components/Icons.jsx'
 import { cheer } from '../components/Buddy.jsx'
 import { VideoCard } from './Lesson.jsx'
@@ -133,10 +134,10 @@ export default function Enrichments({ data, store, student }) {
                   {extras.map((e) => e.kind === 'video'
                     ? <VideoCard key={e.id} video={{ url: e.url, title: e.title, lessonTitle: 'من المعلمة' }} compact onOpen={(u) => track(store, student, 'video', u)} />
                     : (
-                      <a key={e.id} className="res-row" href={e.url} target="_blank" rel="noopener noreferrer">
+                      <FileA key={e.id} className="res-row" url={e.url}>
                         <span className="k"><Icon name={e.kind === 'file' ? 'file' : 'link'} /></span>
                         <span style={{ minWidth: 0 }}><b style={{ fontFamily: 'var(--f-display)', fontWeight: 600, display: 'block' }}>{e.title}</b><span className="muted small">من المعلمة</span></span>
-                      </a>
+                      </FileA>
                     ))}
                 </div>
               </section>

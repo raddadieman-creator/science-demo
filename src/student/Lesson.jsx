@@ -5,6 +5,7 @@ import { activityDone, checkAnswer, markActivity, markLesson, markVideo, saveChe
 import { track } from '../lib/track.js'
 import { cheer } from '../components/Buddy.jsx'
 import { ORD, themeFor, ytThumb } from '../lib/theme.js'
+import { FileCard } from './QA.jsx'
 
 const Scene3D = lazy(() => import('../components/Scene3D.jsx'))
 
@@ -169,6 +170,13 @@ export default function Lesson({ data, id, go, store, student }) {
                 </div>
               </div>
               <SortActivity lessonId={lesson.id} activity={lesson.activity} onDone={() => track(store, student, 'activity', lesson.id)} />
+            </section>
+          )}
+
+          {(data.files || []).some((f) => f.lesson_id === lesson.id) && (
+            <section className="stack">
+              <h2>ملفات من المعلمة</h2>
+              <div className="sfile-grid">{data.files.filter((f) => f.lesson_id === lesson.id).map((f) => <FileCard key={f.id} f={f} lesson={lesson} />)}</div>
             </section>
           )}
 

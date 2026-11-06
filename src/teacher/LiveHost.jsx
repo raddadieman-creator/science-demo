@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Img } from '../components/Media.jsx'
 import { SITE } from '../config.js'
 import { leaderboard } from '../student/LivePlay.jsx'
 
@@ -68,6 +69,7 @@ export default function LiveHost({ store, data }) {
             {game.status === 'question' ? <span className="timer">{left}</span> : <span className="chip good">الإجابة الصحيحة</span>}
           </div>
           <p className="qtext">{q.text}</p>
+          <Img src={q.image} />
           <div className="dist">
             {q.options.map((o, c) => {
               const n = answersNow.filter((a) => a.choice === c).length

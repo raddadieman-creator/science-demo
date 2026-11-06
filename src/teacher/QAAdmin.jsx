@@ -3,7 +3,12 @@ import { useState } from 'react'
 import Icon from '../components/Icons.jsx'
 import { uid } from '../lib/store.js'
 import { fmtDate } from './analytics.js'
+import { FileA, ImagePicker, Img } from '../components/Media.jsx'
+import ImportBox from './ImportBox.jsx'
+import { downloadBankTemplate, parseBankFile } from './excel.js'
+import { fileKind, fmtSize, KIND_LABEL, MAX_FILE_MB, shrinkImage } from '../lib/files.js'
 
+const nQ = (n) => (n === 1 ? 'سؤال واحد' : n === 2 ? 'سؤالان' : n <= 10 ? `${n} أسئلة` : `${n} سؤالًا`)
 const lessonTitle = (data, id) => data.lessons.find((l) => l.id === id)?.title
 
 function LessonSelect({ id, data, value, onChange, none = 'بدون درس' }) {
@@ -74,13 +79,15 @@ function Reply({ store, data, q, reload }) {
   )
 }
 
-const blankItem = () => ({ id: uid(), lesson_id: '', ord: 0, question: '', answer: '' })
+const blankItem = () => ({ id: uid(), lesson_id: '', ord: 0, question: '', answer: '', image: '' })
 
 function BankAdmin({ store, data, reload }) {
   const [form, setForm] = useState(null)
   const [filter, setFilter] = useState('')
   const [confirm, setConfirm] = useState(null)
   const [err, setErr] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [msg, setMsg] = useState('')
   const bank = data.bank || []
   const list = bank.filter((b) => !filter || b.lesson_id === filter)
 
@@ -89,7 +96,7 @@ function BankAdmin({ store, data, reload }) {
     if (!form.question.trim() || !form.answer.trim()) return setErr('اكتبي السؤال والإجابة.')
     try {
       const ord = form.ord || (Math.max(0, ...bank.filter((b) => b.lesson_id === form.lesson_id).map((b) => b.ord || 0)) + 1)
-      await store.saveBankItem({ ...form, ord, lesson_id: form.lesson_id || null, question: form.question.trim(), answer: form.answer.trim() })
+      await store.saveBankItem({ ...form, ord, lesson_id: form.lesson_id || null, question: form.question.trim(), answer: form.answer.trim(), image: form.image || null })
       setForm(null); await reload()
     } catch (x) { setErr(x.message) }
   }
@@ -101,12 +108,28 @@ function BankAdmin({ store, data, reload }) {
           <button aria-pressed={filter === ''} onClick={() => setFilter('')}>الكل ({bank.length})</button>
           {data.lessons.map((l) => <button key={l.id} aria-pressed={filter === l.id} onClick={() => setFilter(l.id)}>{l.title} ({bank.filter((b) => b.lesson_id === l.id).length})</button>)}
         </div>
-        <button className="btn btn-sm btn-primary" onClick={() => setForm({ ...blankItem(), lesson_id: filter })}><Icon name="spark" /> سؤال جديد</button>
+        <div className="row">
+          <button className="btn btn-sm" onClick={() => { setImporting(true); setForm(null) }}><Icon name="download" /> رفع من Excel</button>
+          <button className="btn btn-sm btn-primary" onClick={() => { setForm({ ...blankItem(), lesson_id: filter }); setImporting(false) }}><Icon name="spark" /> سؤال جديد</button>
+        </div>
       </div>
+      {msg && <div className="notice ok" role="status">{msg}</div>}
+      {importing && (
+        <ImportBox
+          title="رفع أسئلة المذاكرة من Excel"
+          target="بنك المذاكرة"
+          onTemplate={() => downloadBankTemplate(data.lessons)}
+          onParse={(f) => parseBankFile(f, data.lessons)}
+          preview={(x) => (<><div className="row"><span className="chip primary">{lessonTitle(data, x.lesson_id) || 'بدون درس'}</span></div><b>{x.question}</b><span className="small">{x.answer}</span></>)}
+          onCommit={async (rows) => { for (const r of rows) await store.saveBankItem(r); await reload(); setImporting(false); setMsg(`أُضيف إلى بنك المذاكرة: ${nQ(rows.length)}.`) }}
+          onClose={() => setImporting(false)}
+        />
+      )}
 
       {form && (
         <form className="panel stack" onSubmit={save} style={{ borderColor: 'var(--primary)' }}>
           <label className="field" htmlFor="bk-q">السؤال<textarea id="bk-q" className="input" rows={2} value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></label>
+          <ImagePicker store={store} id="bk-img" value={form.image || ''} onChange={(u) => setForm({ ...form, image: u })} />
           <label className="field" htmlFor="bk-a">الإجابة<textarea id="bk-a" className="input" rows={3} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} /></label>
           <label className="field" htmlFor="bk-l">الدرس<LessonSelect id="bk-l" data={data} value={form.lesson_id} onChange={(v) => setForm({ ...form, lesson_id: v })} /></label>
           {err && <div className="notice error" role="alert">{err}</div>}
@@ -122,6 +145,7 @@ function BankAdmin({ store, data, reload }) {
                 <p style={{ fontWeight: 700, lineHeight: 1.7, flex: '1 1 220px' }}>{b.question}</p>
                 {b.lesson_id && <span className="chip primary">{lessonTitle(data, b.lesson_id)}</span>}
               </div>
+              {b.image && <Img src={b.image} className="q-thumb" />}
               <p className="small" style={{ lineHeight: 1.8 }}>{b.answer}</p>
               <div className="row">
                 <button className="btn btn-sm" onClick={() => setForm({ ...blankItem(), ...b, lesson_id: b.lesson_id || '' })}>تعديل</button>
@@ -140,6 +164,83 @@ function BankAdmin({ store, data, reload }) {
   )
 }
 
+function FilesAdmin({ store, data, reload }) {
+  const [title, setTitle] = useState('')
+  const [lesson, setLesson] = useState('')
+  const [files, setFiles] = useState([])
+  const [busy, setBusy] = useState('')
+  const [err, setErr] = useState('')
+  const [confirm, setConfirm] = useState(null)
+  const list = data.files || []
+
+  const upload = async (e) => {
+    e.preventDefault(); setErr('')
+    if (!files.length) return setErr('اختاري ملفًا واحدًا على الأقل.')
+    const big = files.find((f) => f.size > MAX_FILE_MB * 1024 * 1024)
+    if (big) return setErr(`«${big.name}» أكبر من ${MAX_FILE_MB} ميجابايت.`)
+    try {
+      for (let i = 0; i < files.length; i++) {
+        setBusy(`جارٍ رفع ${i + 1} من ${files.length}…`)
+        const f = await shrinkImage(files[i], 2000)
+        const url = await store.uploadFile(f)
+        const name = files[i].name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim()
+        await store.addStudyFile({ title: (files.length === 1 && title.trim()) || name, lesson_id: lesson || null, url, mime: f.type || '', file_name: f.name, size: f.size })
+      }
+      setTitle(''); setFiles([]); await reload()
+    } catch (x) { setErr(x.message) } finally { setBusy('') }
+  }
+
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <form className="panel stack" onSubmit={upload}>
+        <h3>رفع ملفات للطالبات</h3>
+        <label className="file-drop" htmlFor="sf-file">
+          <Icon name="file" size={28} />
+          <b>{files.length ? files.map((f) => f.name).join('، ') : 'اختاري ملفات PDF أو Word أو صور أو عروض'}</b>
+          <small className="muted">يمكن اختيار أكثر من ملف · الحد {MAX_FILE_MB} ميجابايت للملف</small>
+        </label>
+        <input id="sf-file" type="file" multiple hidden accept=".pdf,.doc,.docx,.ppt,.pptx,image/*" onChange={(e) => setFiles([...e.target.files])} />
+        <div className="form-grid">
+          <label className="field" htmlFor="sf-title">العنوان{files.length > 1 ? ' (يُستخدم اسم كل ملف)' : ''}
+            <input id="sf-title" className="input" value={title} disabled={files.length > 1} onChange={(e) => setTitle(e.target.value)} placeholder={files[0]?.name.replace(/\.[^.]+$/, '') || ''} />
+          </label>
+          <label className="field" htmlFor="sf-lesson">الدرس<LessonSelect id="sf-lesson" data={data} value={lesson} onChange={setLesson} none="عام للوحدة" /></label>
+        </div>
+        {err && <div className="notice error" role="alert">{err}</div>}
+        <button className="btn btn-primary" disabled={Boolean(busy)} style={{ alignSelf: 'flex-start' }}><Icon name="send" /> {busy || 'رفع ونشر للطالبات'}</button>
+      </form>
+
+      {list.length === 0 ? <div className="empty">لم ترفعي ملفات بعد.</div> : (
+        <div className="list">
+          {list.map((f) => {
+            const k = fileKind(f.mime, f.file_name)
+            return (
+              <div key={f.id} className="item">
+                <div className="spread" style={{ alignItems: 'flex-start' }}>
+                  <div className="row" style={{ minWidth: 0, flex: '1 1 220px' }}>
+                    <span className={`fk fk-${k}`}>{KIND_LABEL[k]}</span>
+                    <FileA url={f.url} style={{ fontWeight: 700, overflowWrap: 'anywhere' }}>{f.title}</FileA>
+                  </div>
+                  <span className="chip primary">{lessonTitle(data, f.lesson_id) || 'عام'}</span>
+                </div>
+                <span className="small muted">{fmtSize(f.size)} · {fmtDate(f.created_at)}</span>
+                <div className="row">
+                  {confirm === f.id ? (
+                    <>
+                      <button className="btn btn-sm btn-danger" onClick={async () => { await store.deleteStudyFile(f.id); setConfirm(null); reload() }}>تأكيد الحذف</button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => setConfirm(null)}>إلغاء</button>
+                    </>
+                  ) : <button className="btn btn-sm btn-ghost btn-danger" onClick={() => setConfirm(f.id)}>حذف</button>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function QAAdmin({ store, data, sq, reload }) {
   const [view, setView] = useState('inbox')
   const inbox = sq.filter((s) => s.status === 'new')
@@ -150,6 +251,7 @@ export default function QAAdmin({ store, data, sq, reload }) {
         <button aria-pressed={view === 'inbox'} onClick={() => setView('inbox')}>أسئلة جديدة ({inbox.length})</button>
         <button aria-pressed={view === 'answered'} onClick={() => setView('answered')}>أجبتُ عنها ({answered.length})</button>
         <button aria-pressed={view === 'bank'} onClick={() => setView('bank')}>بنك المذاكرة ({(data.bank || []).length})</button>
+        <button aria-pressed={view === 'files'} onClick={() => setView('files')}>ملفات المذاكرة ({(data.files || []).length})</button>
       </div>
       {view === 'inbox' && (inbox.length === 0 ? <div className="empty">لا توجد أسئلة جديدة.</div> : (
         <div className="list">{inbox.map((q) => <Reply key={q.id} store={store} data={data} q={q} reload={reload} />)}</div>
@@ -158,6 +260,7 @@ export default function QAAdmin({ store, data, sq, reload }) {
         <div className="list">{answered.map((q) => <Reply key={q.id + (q.answered_at || '')} store={store} data={data} q={q} reload={reload} />)}</div>
       ))}
       {view === 'bank' && <BankAdmin store={store} data={data} reload={reload} />}
+      {view === 'files' && <FilesAdmin store={store} data={data} reload={reload} />}
     </div>
   )
 }

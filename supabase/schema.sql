@@ -125,6 +125,21 @@ create table if not exists study_bank (
   created_at timestamptz default now()
 );
 alter table study_bank enable row level security;
+alter table study_bank add column if not exists image text;
+alter table questions add column if not exists image text;
+
+-- ملفات المذاكرة التي ترفعها المعلمة (PDF وWord وصور)
+create table if not exists study_files (
+  id text primary key,
+  title text not null check (char_length(title) between 1 and 200),
+  lesson_id text,
+  url text not null,
+  mime text default '',
+  file_name text default '',
+  size bigint default 0,
+  created_at timestamptz default now()
+);
+alter table study_files enable row level security;
 
 create table if not exists games (
   id text primary key,
@@ -176,7 +191,7 @@ alter table game_answers enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges','study_bank'] loop
+  foreach t in array array['lessons','quizzes','questions','faq','enrichments','games','challenges','study_bank','study_files'] loop
     execute format('drop policy if exists "read_%1$s" on %1$s', t);
     execute format('create policy "read_%1$s" on %1$s for select using (true)', t);
     execute format('drop policy if exists "teacher_%1$s" on %1$s', t);
