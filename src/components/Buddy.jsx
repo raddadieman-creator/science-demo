@@ -114,7 +114,11 @@ export default function Buddy({ onOpen, hidden }) {
 
   // يبقى داخل الشاشة عند تغيير حجمها
   useEffect(() => {
-    const fit = () => setPos((p) => ({ x: Math.min(p.x, window.innerWidth - 100), y: Math.min(p.y, window.innerHeight - 106) }))
+    const fit = () => {
+      const w = window.innerWidth, h = window.innerHeight
+      if (w < 200 || h < 200) return
+      setPos((p) => ({ x: Math.max(8, Math.min(p.x, w - 100)), y: Math.max(90, Math.min(p.y, h - 106)) }))
+    }
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
   }, [])
