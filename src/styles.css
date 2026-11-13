@@ -883,3 +883,6 @@ tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--prim
   .me-chip > span:not(.av) { max-width: 70px; font-size: 0.8rem; }
   .bell { width: 30px; height: 30px; }
 }
+
+.footer .credit { font-weight: 600; }
+.footer .credit b { font-weight: 800; color: var(--ink, inherit); }

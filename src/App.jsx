@@ -178,6 +178,7 @@ export default function App() {
       <footer className="footer">
         <div className="wrap">
           <span>{SITE.name} · {SITE.unitNote}</span>
+          <span className="credit">تصميم: <b dir="ltr">Research by Eman</b></span>
           {isTeacher
             ? <button className="linkbtn" onClick={() => go('home')}>واجهة الطالبات</button>
             : <button className="linkbtn" onClick={() => go('teacher')}>دخول المعلمة</button>}
